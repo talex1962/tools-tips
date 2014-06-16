@@ -1,0 +1,50 @@
+* if 'git pull' fails from GitHub, try 'git pull origin master'
+  (The error is usually something like "You asked me to pull without telling me which branch you
+   want to merge with, ...")
+
+* to avoid having to type 'git pull origin master' every time:
+
+    git push -u origin master
+
+  Now 'git pull' will work.
+
+* instead of 'git commit' use 'git commit -a -m "message"' which will cause all changes staged for commit to be committed.
+
+* git diff will provide a summary of differences between the staging area and the last revision.
+
+* to create an initial clone of the 'ld' repository (including the 'ld' subdirectory) into the current directory, perform:
+
+    git clone https://talex1962@github.com/talex1962/ld.git
+
+Then do
+
+    git push -u origin master
+
+and git push/pull will work without further ado.
+
+* Creating a new Github repository around an existing directory tree:
+
+1. Create the repository on Github using the web interface (see the '+' sign on the top right of the dashboard). Note the repository name as <repo name>.git.
+2. Make sure that the top level of the directory tree is named the same as the repository name (for consistency).
+3. Create an empty 'README.md' file in the top level of the directory tree:
+	touch README.md
+4. Initialize a Git repository at the top level of the directory tree and add the README.md file as its first (and only) contents:
+	git init
+	git add README.md
+	git commit -m "initializing repository"
+5. Link the Github repository to the newly created local Git repository:
+	git remote add origin https://github.com/talex1962/<repo name>.git
+6. Push the newly created README.md file to the Github repository as the first contents:
+	git push -u origin master
+7. Edit the Git config file to configure the username; change:
+	url = https://github.com/talex1962/<repo name>.git
+   to:
+	url = https://talex1962@github.com/talex1962/<repo name>.git
+8. Add the remainder of the files within the directory tree to the local Git repository:
+	git add <files and directories> (or just git add .)
+9. Edit the README.md file and enter the details of the new repository.
+10. Push the new collection of data and the updated README.md file to Github:
+	git commit -a -m "Added directory contents to repository"
+	git push origin
+
+NOTE: for an existing Git local repository, omit steps 3 and 4.
