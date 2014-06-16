@@ -1,0 +1,67 @@
+1. Useful tools & programs
+--------------------------
+
+sudo apt-get install -y vim exuberant-ctags xtitle
+
+2. Bashrc
+---------
+
+a) comment out the following lines, and also the line with 'PS1' later
+      #if [ "$color_prompt" = yes ]; then
+      #    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+      #else
+      #    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+      #fi
+      #unset color_prompt force_color_prompt
+      
+      # If this is an xterm set the title to user@host:dir
+      case "$TERM" in
+      xterm*|rxvt*)
+          #PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+          ;;
+      *)
+    ;;
+      esac
+
+b) Add the following:
+
+# set the window title
+xtitle "AWS-regserver"
+
+# some more general aliases
+alias rm='rm -i'
+alias gitshow='git show --pretty="format:" --name-only $1'
+alias title=xtitle
+
+PATH=$PATH:/usr/lib/python2.7/dist-packages/django/bin
+export PATH
+
+# set an environment variable to indicate the IP address of this host, for Django
+# NOTE! find the actual IP address and set it!
+MYIPADDR="54.213.214.44"
+export MYIPADDR
+
+3. vimrc
+--------
+
+set tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+set wrapscan wrapmargin=0 wrap linebreak textwidth=0 columns=96
+set backspace=indent,eol,start
+set autoindent nosmartindent cindent
+set ignorecase smartcase
+set hlsearch
+set noedcompatible nocompatible nocscopetag
+set exrc
+set tags=tags,./tags,../tags,../../tags,../../../tags,../../../../tags,~/tags
+set title
+
+inoremap # X#
+nnoremap  g
+
+syn on
+filetype plugin on
+filetype indent on
+
+let &titlestring = "AWS-vcioserver: " . expand("%m%t")
+auto BufEnter * :let &titlestring = "AWS-vcioserver: " . expand("%m%t")
+auto VimLeave * :set t_ts=k\
