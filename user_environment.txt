@@ -55,8 +55,8 @@ set exrc
 set tags=tags,./tags,../tags,../../tags,../../../tags,../../../../tags,~/tags
 set title
 
-inoremap # X#
-nnoremap  g
+inoremap # X^H#
+nnoremap ^] g^]
 
 syn on
 filetype plugin on
@@ -64,4 +64,4 @@ filetype indent on
 
 let &titlestring = "AWS-vcioserver: " . expand("%m%t")
 auto BufEnter * :let &titlestring = "AWS-vcioserver: " . expand("%m%t")
-auto VimLeave * :set t_ts=k\
+auto VimLeave * :set t_ts=^]k^]\
