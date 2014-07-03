@@ -48,3 +48,13 @@ and git push/pull will work without further ado.
 	git push origin
 
 NOTE: for an existing Git local repository, omit steps 3 and 4.
+
+* removing files & directories to be ignored from 'git status'
+
+    1. Commit all pending changes first
+    2. git rm --cached <file> or git rm -r --cached <directory>
+    3. Commit again
+    4. Add the file to .gitignore
+    5. Check with git status and commit again
+    6. git update-index --assume-unchanged <file>
+
