@@ -1,0 +1,119 @@
+SETTING UP A NEW LITTLE DEVICE
+------------------------------
+
+1. Utilities and Git - install first
+
+    rm -rf Documents/ Downloads/ Music/ Pictures/ Public/ Templates/ Videos/
+    sudo apt-get install -y openssh-server xtitle vim exuberant-ctags git tcpdump
+
+2. VLANs
+
+    sudo apt-get install -y vlan
+    sudo modprobe 8021q
+    sudo echo 8021q >> /etc/modules
+
+3. SSH and keys
+
+    mkdir ~/.ssh
+    cd ~/.ssh
+    vi authorized_keys
+    Add PuTTY public key:
+
+ssh-rsa                                                                                         AAAAB3NzaC1yc2EAAAABJQAAAQEApbgyQtey4UaSh8VibVo6HsL9vSBZfIMFB6l71nCH5D2dfetKa2MqhjygPCVat0V8cAb7LhKpu6Iaaz6E8fzeMGQ9VYQ1kEKzxUtWcAWkqXeXiUstXNG4MxErnONJRfmEdeDbfVWDLuet7zVfq9AWo2bSNR/         egeNHzIptueSiYxsEzL576VWEPhFZRCWGQ3/psutKlCds5awfOSV9p+TZPjr8BQerFnPrVDLVEbMDZBJZ480eSNwOI+     fZCpMuOhRgj1AVbE9Wdu/e6F8rmJrjkAFSXxvGQ9FHcWUq2CxLEH6JJKZ9qTHxKqPdbHMZbKAiyg6TM5ByGN+zjlFSfA+   8SQ== rsa-key-20140207
+
+    chmod go-rwx authorized_keys
+    cd ..
+    chmod go-rwx .ssh
+
+4. Speed up boot time and various other stuff
+
+    sudo vi /etc/init/failsafe.conf
+    -- reduce all sleep times
+    sudo vi /etc/group
+    -- add ld-admin to lots of groups
+
+5. Set up the network
+
+    sudo vi /etc/network/interfaces
+    Edit:
+
+        #------------------------------------------------------------------------------
+        # the loopback interface
+        auto lo
+        iface lo inet loopback
+
+        #------------------------------------------------------------------------------
+        # eth0 is the uplink port to the Internet/rest-of-LAN
+        # SET THE ADDRESS APPROPRIATELY
+        auto eth0
+        iface eth0 inet static
+            address 192.168.0.55
+            netmask 255.255.255.0
+            network 192.168.0.0
+            broadcast 192.168.0.255
+            gateway 192.168.0.1
+            dns-nameservers 65.182.224.40 65.182.224.50
+
+        #------------------------------------------------------------------------------
+        # eth1.1 is the Little Devices subnetwork 192.168.1.x on VLAN 1 (default)
+        auto eth1.1
+        iface eth1.1 inet static
+            address 192.168.1.1
+            netmask 255.255.255.0
+            network 192.168.1.0
+            broadcast 192.168.1.255
+            dns-nameservers 65.182.224.40 65.182.224.50
+
+        #------------------------------------------------------------------------------
+        # eth1.2 is the Little Devices subnetwork 192.168.2.x on VLAN 2 (Test)
+        auto eth1.2
+        iface eth1.2 inet static
+            address 192.168.2.1
+            netmask 255.255.255.0
+            network 192.168.2.0
+            broadcast 192.168.2.255
+            dns-nameservers 65.182.224.40 65.182.224.50
+
+        #------------------------------------------------------------------------------
+        # eth1.3 is the Little Devices subnetwork 192.168.3.x on VLAN 3 (Guest)
+        auto eth1.3
+        iface eth1.3 inet static
+            address 192.168.3.1
+            netmask 255.255.255.0
+            network 192.168.3.0
+            broadcast 192.168.3.255
+            dns-nameservers 65.182.224.40 65.182.224.50
+
+        #------------------------------------------------------------------------------
+        # use the router on 192.168.0.1 as the default gateway
+        up route add default gw 192.168.0.1
+
+Reboot to set the network into action. The rest can be done via SSH.
+
+6. Python stuff
+
+    sudo apt-get -y install python-pip unzip python-dev python-docutils
+    sudo pip install httplib2
+
+7. Install the LD source tree
+
+    mkdir ~/src
+    cd ~/src
+    git clone https://talex1962@github.com/talex1962/ld.git
+    cd ld
+    git push -u origin master
+    cd littledev
+    mkdir logs
+    vi commsManager.py
+    -- modify the IP addresses to match that of the device and VMs
+    cd db
+    vi LDDB.py LANDB.py
+    -- modify the IP addresses and URLs to match that of the devices and VMs
+    python LDDB.py
+    python LANDB.py
+
+8. Final cleanup
+
+    sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
+    reboot
+
