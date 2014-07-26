@@ -1,6 +1,16 @@
 SETTING UP A NEW LITTLE DEVICE
 ------------------------------
 
+0. Install Xubuntu 14.04 LTS
+    - username ld-admin
+    - password friday
+    - autologin
+    - disk partitions:
+        - /dev/sda1 - 256MB - /boot - format to ext4
+        - /dev/sda2 - 5.0GB - /root - format to ext4
+        - /dev/sda3 - 4.0GB - swap
+        - /dev/sda4 - ~20GB - not mounted - format to ext4
+
 1. Utilities and Git - install first
 
     rm -rf Documents/ Downloads/ Music/ Pictures/ Public/ Templates/ Videos/
@@ -116,4 +126,42 @@ Reboot to set the network into action. The rest can be done via SSH.
 
     sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
     reboot
+
+9. ld-admin home directory
+
+    Edit .bashrc:
+
+        -- comment out PS1= stuff (2 places)
+        -- add 'xtitle $HOSTNAME'
+        -- add aliases:
+            alias rm='rm -i'
+            alias gitshow='git show --pretty="format:" --name-only $1'
+            alias update='sudo apt-get -y update && sudo apt-get -y upgrade'
+            alias title=xtitle
+        -- set the cdpath
+            CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/littledev"
+
+    Edit .vimrc:
+
+        set tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+        set wrapscan wrapmargin=0 wrap linebreak textwidth=0 columns=96
+        set backspace=indent,eol,start
+        set autoindent nosmartindent cindent
+        set ignorecase smartcase
+        set hlsearch
+        set noedcompatible nocompatible nocscopetag
+        set exrc
+        set tags=./tags,../tags,../../tags,../../../tags,~/tags
+        set title
+
+        inoremap # X^H#
+        nnoremap ^] g^]
+
+        syn on
+        filetype plugin on
+        filetype indent on
+
+        let &titlestring = hostname() . ": " . expand("%m%t")
+        auto BufEnter * :let &titlestring = hostname() . ": " . expand("%m%t")
+        auto VimLeave * :set t_ts="LittleDevice4"
 
