@@ -14,13 +14,7 @@ SETTING UP A NEW LITTLE DEVICE
 1. Utilities and Git - install first
 
     rm -rf Documents/ Downloads/ Music/ Pictures/ Public/ Templates/ Videos/
-    sudo apt-get install -y openssh-server xtitle vim exuberant-ctags git tcpdump
-
-2. VLANs
-
-    sudo apt-get install -y vlan
-    sudo modprobe 8021q
-    sudo echo 8021q >> /etc/modules
+    sudo apt-get install -y openssh-server xtitle vim exuberant-ctags git tcpdump dkms
 
 3. SSH and keys
 
@@ -29,7 +23,9 @@ SETTING UP A NEW LITTLE DEVICE
     vi authorized_keys
     Add PuTTY public key:
 
-ssh-rsa                                                                                         AAAAB3NzaC1yc2EAAAABJQAAAQEApbgyQtey4UaSh8VibVo6HsL9vSBZfIMFB6l71nCH5D2dfetKa2MqhjygPCVat0V8cAb7LhKpu6Iaaz6E8fzeMGQ9VYQ1kEKzxUtWcAWkqXeXiUstXNG4MxErnONJRfmEdeDbfVWDLuet7zVfq9AWo2bSNR/         egeNHzIptueSiYxsEzL576VWEPhFZRCWGQ3/psutKlCds5awfOSV9p+TZPjr8BQerFnPrVDLVEbMDZBJZ480eSNwOI+     fZCpMuOhRgj1AVbE9Wdu/e6F8rmJrjkAFSXxvGQ9FHcWUq2CxLEH6JJKZ9qTHxKqPdbHMZbKAiyg6TM5ByGN+zjlFSfA+   8SQ== rsa-key-20140207
+ssh-rsa                                                                                         AAAAB3NzaC1yc2EAAAABJQAAAQEApbgyQtey4UaSh8VibVo6HsL9vSBZfIMFB6l71nCH5D2dfetKa2MqhjygPCVat0V8cAb7LhKpu6Iaaz6E8fzeMGQ9VYQ1kEKzxUtWcAWkqXeXiUstXNG4MxErnONJRfmEdeDbfVWDLuet7zVfq9AWo2bSNR/egeNHzIptueSiYxsEzL576VWEPhFZRCWGQ3/psutKlCds5awfOSV9p+TZPjr8BQerFnPrVDLVEbMDZBJZ480eSNwOI+fZCpMuOhRgj1AVbE9Wdu/e6F8rmJrjkAFSXxvGQ9FHcWUq2CxLEH6JJKZ9qTHxKqPdbHMZbKAiyg6TM5ByGN+zjlFSfA+8SQ== rsa-key-20140207
+
+    (CHECK FOR SPACES!!)
 
     chmod go-rwx authorized_keys
     cd ..
@@ -42,7 +38,13 @@ ssh-rsa                                                                         
     sudo vi /etc/group
     -- add ld-admin to lots of groups
 
-5. Set up the network
+2. Networking
+
+    sudo apt-get install -y vlan isc-dhcp-server ntp bind9 dnsutils
+    sudo modprobe 8021q
+    sudo vi /etc/modules
+    -- Edit: add the following line at the end
+        8021q
 
     sudo vi /etc/network/interfaces
     Edit:
@@ -98,7 +100,196 @@ ssh-rsa                                                                         
         # use the router on 192.168.0.1 as the default gateway
         up route add default gw 192.168.0.1
 
-Reboot to set the network into action. The rest can be done via SSH.
+6. Set up DHCP and DNS services
+
+    Edit /etc/dhcp/dhcpd.conf and /etc/default/isc-dhcp-server
+    sudo vi dhcpd.conf:
+        -- modify
+
+        default-lease-time 600;
+        max-lease-time 7200;
+        authoritative;
+
+        subnet 192.168.1.0 netmask 255.255.255.0 {
+            range 192.168.1.100 192.168.1.250;
+            option routers 192.168.1.1;
+            option domain-name-servers 65.182.224.40, 65.182.224.50;
+            option domain-name "ldevs.com";
+        }
+
+        subnet 192.168.2.0 netmask 255.255.255.0 {
+            range 192.168.2.100 192.168.2.250;
+            option routers 192.168.2.1;
+            option domain-name-servers 65.182.224.40, 65.182.224.50;
+            option domain-name "ldevs.com";
+        }
+
+        subnet 192.168.3.0 netmask 255.255.255.0 {
+            range 192.168.3.100 192.168.3.250;
+            option routers 192.168.3.1;
+            option domain-name-servers 65.182.224.40, 65.182.224.50;
+            option domain-name "ldevs.com";
+        }
+
+    sudo vi isc-dhcp-server
+        -- modify
+
+        INTERFACES="eth1.1 eth1.2 eth1.3"
+
+    sudo service isc-dhcp-server restart
+
+    sudo vi /etc/bind/named.conf.options
+        -- modify:
+
+        forwarders {
+            65.182.224.40;
+            65.182.224.50;
+                    };
+
+    sudo service bind9 restart
+
+8. Set up routing
+
+    sudo vi /etc/sysctl.conf
+        -- modify:
+
+        net.ipv4.ip_forward=1
+
+    sudo sh -c "echo 1 >> /proc/sys/net/ipv4/ip_forward"
+    sudo service procps start
+        (returns "procps stop/waiting")
+    sudo sysctl -p
+
+    Now reboot to set the network configs into action.
+    NOTE: pinging an external host will not work unless NAT is running!
+
+9. TODO - set up iptables for NAT
+
+7. File system and service
+
+    sudo apt-get install -y lvm2 liblvm2-dev samba cryptsetup-bin cryptsetup
+
+    === INITIAL BASIC SAMBA FILESERVER TEST
+    ----- Do following if /dev/sda4 formatted to ext4 and mounted on /srv ----
+
+    sudo umount /dev/sda4
+
+    --------------------------------------------------
+
+    sudo fdisk /dev/sda
+    p (and verify that /dev/sda4 is partition number 4)
+    t
+    4
+    8e
+    p
+    w
+
+    sudo pvcreate /dev/sda4
+    sudo vgcreate storage /dev/sda4
+    sudo vgdisplay
+    sudo lvcreate -L 5G -n testshare storage
+    sudo lvdisplay
+    sudo mkfs.ext4 /dev/mapper/storage-testshare
+    sudo mkdir -p /srv/storage/testshare
+    sudo chmod a+rwx /srv/storage
+    sudo mount /dev/mapper/storage-testshare /srv/storage/testshare
+    sudo chmod a+rwx /srv/storage/testshare
+    sudo vi /etc/fstab
+    -- modify:
+        -- comment out line for /dev/sda4
+        -- add:
+            /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 1 2
+
+    Set up Samba:
+
+        -- add a guest user named storage for anonymous accesses
+        sudo addgroup --system storage
+        NOTE: record the GID, normally 128
+        sudo adduser --system --gid 128 --no-create-home storage
+
+        sudo vi /etc/samba/smb.conf
+        -- modify
+            #workgroup = LITTLEDEVICES
+            workgroup = VERIWAVE
+            #wins support = yes
+            #dns proxy = yes
+            interfaces = 127.0.0.0/8 192.168.1.0/24 192.168.2.0/24 192.168.3.0/24 eth1.1 eth1.2 eth1.3
+            bind interfaces only = yes
+            ...
+            security = user
+            guest account = storage
+            map to guest = bad user
+
+            [testshare]
+                comment = LittleDevices Test Share
+                path = /srv/storage/testshare
+                browsable = yes
+                guest ok = yes
+                read only = no
+                create mask = 0755
+        NOTE: comment out all the printer stuff
+
+        -- make testshare accessible
+        sudo chmod a+rwx /srv/storage
+        sudo chmod a+rwx /srv/testshare
+
+        sudo restart smbd
+        sudo restart nmbd
+
+    Verify that Samba is active and works, and exporting a 5G filesystem
+    under testshare. Reboot and verify that it continues to work.
+
+    === ENCRYPTED LVM FILESERVER
+    ---- Do following if the test was done above: ----
+
+    sudo service smbd stop
+    sudo service nmbd stop
+    sudo umount /srv/storage/testshare
+    sudo lvremove storage/testshare
+    sudo vgremove storage
+    sudo pvremove /dev/sda4
+
+    --------------------------------------------------
+
+    -- setup dm-crypt with a keyfile for automatic boot, and encrypt /dev/sda4
+    sudo dd if=/dev/urandom of=/root/storage_keyfile bs=1024 count=4
+    sudo chmod 0400 /root/storage_keyfile
+    sudo chown root:root /root/storage_keyfile
+    sudo cryptsetup --key-file /root/storage_keyfile --cipher=aes-cbc-plain --key-size=128 luksFormat /dev/sda4
+    sudo vi /etc/crypttab
+    -- modify:
+        sda4_crypt /dev/sda4 /root/storage_keyfile luks,loud,timeout=60
+
+    -- add a keyfile for emergency recovery
+    sudo cryptsetup luksAddKey --key-file=/root/storage_keyfile /dev/sda4
+        NOTE: use passphrase 'friday' for now
+
+    -- manually open the encrypted partition for now so Samba can be tested
+    sudo cryptsetup open --type luks --key-file=/root/storage_keyfile /dev/sda4 sda4_crypt
+
+    -- create LVM and mount a logical volume
+    sudo pvcreate /dev/mapper/sda4_crypt
+    sudo vgcreate storage /dev/mapper/sda4_crypt
+    sudo vgdisplay
+    sudo lvcreate -L 5G -n testshare storage
+    sudo lvdisplay
+    sudo mkfs.ext4 /dev/mapper/storage-testshare
+    sudo mkdir -p /srv/storage/testshare
+    sudo chmod a+rwx /srv/storage
+    sudo mount /dev/mapper/storage-testshare /srv/storage/testshare
+    sudo chmod a+rwx /srv/storage/testshare
+    sudo vi /etc/fstab
+    -- modify:
+        /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 1 2
+
+    sudo restart smbd
+        (or sudo service smbd start)
+    sudo restart nmbd
+        (or sudo service nmbd start)
+
+    Verify that Samba still works and exports a 5G testshare filesystem.
+        smbclient -L localhost
+    Reboot and verify that it continues to work.
 
 6. Python stuff
 
@@ -115,17 +306,12 @@ Reboot to set the network into action. The rest can be done via SSH.
     cd littledev
     mkdir logs
     vi commsManager.py
-    -- modify the IP addresses to match that of the device and VMs
+    -- modify the IP addresses to match that of the switch, AP and VMs
     cd db
     vi LDDB.py LANDB.py
     -- modify the IP addresses and URLs to match that of the devices and VMs
     python LDDB.py
     python LANDB.py
-
-8. Final cleanup
-
-    sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
-    reboot
 
 9. ld-admin home directory
 
@@ -165,3 +351,7 @@ Reboot to set the network into action. The rest can be done via SSH.
         auto BufEnter * :let &titlestring = hostname() . ": " . expand("%m%t")
         auto VimLeave * :set t_ts="LittleDevice4"
 
+8. Final cleanup
+
+    sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
+    sudo reboot
