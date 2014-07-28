@@ -102,8 +102,7 @@ ssh-rsa                                                                         
 
 6. Set up DHCP and DNS services
 
-    Edit /etc/dhcp/dhcpd.conf and /etc/default/isc-dhcp-server
-    sudo vi dhcpd.conf:
+    sudo vi /etc/dhcp/dhcpd.conf
         -- modify
 
         default-lease-time 600;
@@ -131,7 +130,7 @@ ssh-rsa                                                                         
             option domain-name "ldevs.com";
         }
 
-    sudo vi isc-dhcp-server
+    sudo vi /etc/default/isc-dhcp-server
         -- modify
 
         INTERFACES="eth1.1 eth1.2 eth1.3"
@@ -161,7 +160,8 @@ ssh-rsa                                                                         
     sudo sysctl -p
 
     Now reboot to set the network configs into action.
-    NOTE: pinging an external host will not work unless NAT is running!
+
+    NOTE! NOTE! pinging an external host will not work unless NAT is running!
 
 9. TODO - set up iptables for NAT
 
@@ -169,13 +169,11 @@ ssh-rsa                                                                         
 
     sudo apt-get install -y lvm2 liblvm2-dev samba cryptsetup-bin cryptsetup
 
-    === INITIAL BASIC SAMBA FILESERVER TEST
     ----- Do following if /dev/sda4 formatted to ext4 and mounted on /srv ----
-
     sudo umount /dev/sda4
-
     --------------------------------------------------
 
+    === INITIAL BASIC SAMBA FILESERVER TEST
     sudo fdisk /dev/sda
     p (and verify that /dev/sda4 is partition number 4)
     t
@@ -226,7 +224,9 @@ ssh-rsa                                                                         
                 browsable = yes
                 guest ok = yes
                 read only = no
-                create mask = 0755
+                writable = yes
+                create mask = 0777
+                directory mask = 0777
         NOTE: comment out all the printer stuff
 
         -- make testshare accessible
@@ -241,14 +241,12 @@ ssh-rsa                                                                         
 
     === ENCRYPTED LVM FILESERVER
     ---- Do following if the test was done above: ----
-
     sudo service smbd stop
     sudo service nmbd stop
     sudo umount /srv/storage/testshare
     sudo lvremove storage/testshare
     sudo vgremove storage
     sudo pvremove /dev/sda4
-
     --------------------------------------------------
 
     -- setup dm-crypt with a keyfile for automatic boot, and encrypt /dev/sda4
@@ -280,12 +278,45 @@ ssh-rsa                                                                         
     sudo chmod a+rwx /srv/storage/testshare
     sudo vi /etc/fstab
     -- modify:
+        -- comment out line for /dev/sda4
         /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 1 2
 
-    sudo restart smbd
-        (or sudo service smbd start)
-    sudo restart nmbd
-        (or sudo service nmbd start)
+    -- set up Samba:
+    -- add a guest user named storage for anonymous accesses
+    sudo addgroup --system storage
+    NOTE: record the GID, normally 128
+    sudo adduser --system --gid 128 --no-create-home storage
+
+    sudo vi /etc/samba/smb.conf
+    -- modify
+        #workgroup = LITTLEDEVICES
+        workgroup = VERIWAVE
+        #wins support = yes
+        #dns proxy = yes
+        interfaces = 127.0.0.0/8 192.168.1.0/24 192.168.2.0/24 192.168.3.0/24 eth1.1 eth1.2 eth1.3
+        bind interfaces only = yes
+        ...
+        security = user
+        guest account = storage
+        map to guest = bad user
+
+        [testshare]
+            comment = LittleDevices Test Share
+            path = /srv/storage/testshare
+            browsable = yes
+            guest ok = yes
+            read only = no
+            writable = yes
+            create mask = 0755
+            directory mask = 0777
+    NOTE: comment out all the printer stuff
+
+    -- make testshare accessible
+    sudo chmod a+rwx /srv/storage
+    sudo chmod a+rwx /srv/testshare
+
+    sudo service smbd start
+    sudo service nmbd start
 
     Verify that Samba still works and exports a 5G testshare filesystem.
         smbclient -L localhost
