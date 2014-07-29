@@ -16,7 +16,7 @@ SETTING UP A NEW LITTLE DEVICE
     rm -rf Documents/ Downloads/ Music/ Pictures/ Public/ Templates/ Videos/
     sudo apt-get install -y openssh-server xtitle vim exuberant-ctags git tcpdump dkms
 
-3. SSH and keys
+2. SSH and keys
 
     mkdir ~/.ssh
     cd ~/.ssh
@@ -31,14 +31,14 @@ ssh-rsa                                                                         
     cd ..
     chmod go-rwx .ssh
 
-4. Speed up boot time and various other stuff
+3. Speed up boot time and various other stuff
 
     sudo vi /etc/init/failsafe.conf
     -- reduce all sleep times
     sudo vi /etc/group
     -- add ld-admin to lots of groups
 
-2. Networking
+4. Networking
 
     sudo apt-get install -y vlan isc-dhcp-server ntp bind9 dnsutils
     sudo modprobe 8021q
@@ -100,7 +100,7 @@ ssh-rsa                                                                         
         # use the router on 192.168.0.1 as the default gateway
         up route add default gw 192.168.0.1
 
-6. Set up DHCP and DNS services
+5. Set up DHCP and DNS services
 
     sudo vi /etc/dhcp/dhcpd.conf
         -- modify
@@ -147,7 +147,7 @@ ssh-rsa                                                                         
 
     sudo service bind9 restart
 
-8. Set up routing
+6. Set up routing
 
     sudo vi /etc/sysctl.conf
         -- modify:
@@ -163,9 +163,9 @@ ssh-rsa                                                                         
 
     NOTE! NOTE! pinging an external host will not work unless NAT is running!
 
-9. TODO - set up iptables for NAT
+7. TODO - set up iptables for NAT
 
-7. File system and service
+8. File system and service
 
     sudo apt-get install -y lvm2 liblvm2-dev samba cryptsetup-bin cryptsetup
 
@@ -281,7 +281,7 @@ ssh-rsa                                                                         
         -- comment out line for /dev/sda4
         /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 1 2
 
-    -- set up Samba:
+    -- set up Samba with a test share:
     -- add a guest user named storage for anonymous accesses
     sudo addgroup --system storage
     NOTE: record the GID, normally 128
@@ -322,29 +322,12 @@ ssh-rsa                                                                         
         smbclient -L localhost
     Reboot and verify that it continues to work.
 
-6. Python stuff
+9. Python stuff
 
     sudo apt-get -y install python-pip unzip python-dev python-docutils
     sudo pip install httplib2
 
-7. Install the LD source tree
-
-    mkdir ~/src
-    cd ~/src
-    git clone https://talex1962@github.com/talex1962/ld.git
-    cd ld
-    git push -u origin master
-    cd littledev
-    mkdir logs
-    vi commsManager.py
-    -- modify the IP addresses to match that of the switch, AP and VMs
-    cd db
-    vi LDDB.py LANDB.py
-    -- modify the IP addresses and URLs to match that of the devices and VMs
-    python LDDB.py
-    python LANDB.py
-
-9. ld-admin home directory
+10. ld-admin home directory
 
     Edit .bashrc:
 
@@ -382,7 +365,49 @@ ssh-rsa                                                                         
         auto BufEnter * :let &titlestring = hostname() . ": " . expand("%m%t")
         auto VimLeave * :set t_ts="LittleDevice4"
 
-8. Final cleanup
+11. Install the LD source tree
+
+    mkdir ~/src
+    cd ~/src
+    git clone https://talex1962@github.com/talex1962/ld.git
+    cd ld
+    git push -u origin master
+    cd littledev
+    mkdir logs
+    vi commsManager.py
+    -- modify the IP addresses to match that of the switch, AP and VMs
+    cd db
+    vi LDDB.py LANDB.py
+    -- modify the IP addresses and URLs to match that of the devices and VMs
+    python LDDB.py
+    python LANDB.py
+
+12. Volume manager functions
+
+    -- set up sudoers file
+    sudo vi /etc/sudoers
+        -- modify:
+        User_Alias LDUSER = ld-admin
+
+        Cmnd_Alias LVFUNCS_CMDS = /usr/local/bin/ld_lvfuncs.py
+        Cmnd_Alias FSFUNCS_CMDS = /usr/local/bin/ld_fsfuncs.py
+        Cmnd_Alias SMBFUNCS_CMDS = /usr/local/bin/ld_smbfuncs.py
+        Cmnd_Alias LDFUNCS = LVFUNCS_CMDS,FSFUNCS_CMDS,SMBFUNCS_CMDS
+
+        # Allow the Little Devices admin user to run specific commands
+        LDUSER ALL=(ALL) NOPASSWD: LDFUNCS
+
+    -- copy the various volume manager helper functions
+    sudo cp ~/src/ld/littledev/devices/disk/funcs/* /usr/local/bin
+    sudo chown root:root /usr/local/bin/*
+    sudo chmod 0550 /usr/local/bin/*
+
+13. Final cleanup
 
     sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
     sudo reboot
+
+14. Log in and start the daemons
+
+    TODO: Daemonize the various daemons and use upstart to add them to the boot
+    process.
