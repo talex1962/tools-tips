@@ -196,7 +196,7 @@ ssh-rsa                                                                         
     -- modify:
         -- comment out line for /dev/sda4
         -- add:
-            /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 1 2
+            /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 0 2
 
     Set up Samba:
 
@@ -272,6 +272,8 @@ ssh-rsa                                                                         
     sudo lvcreate -L 5G -n testshare storage
     sudo lvdisplay
     sudo mkfs.ext4 /dev/mapper/storage-testshare
+
+    -- mount the new test share and make it accessible to Samba
     sudo mkdir -p /srv/storage/testshare
     sudo chmod a+rwx /srv/storage
     sudo mount /dev/mapper/storage-testshare /srv/storage/testshare
@@ -279,7 +281,7 @@ ssh-rsa                                                                         
     sudo vi /etc/fstab
     -- modify:
         -- comment out line for /dev/sda4
-        /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 1 2
+        /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 0 2
 
     -- set up Samba with a test share:
     -- add a guest user named storage for anonymous accesses
@@ -311,11 +313,9 @@ ssh-rsa                                                                         
             directory mask = 0777
     NOTE: comment out all the printer stuff
 
-    -- make testshare accessible
-    sudo chmod a+rwx /srv/storage
-    sudo chmod a+rwx /srv/testshare
-
+    sudo service smbd stop
     sudo service smbd start
+    sudo service nmbd stop
     sudo service nmbd start
 
     Verify that Samba still works and exports a 5G testshare filesystem.
@@ -398,9 +398,21 @@ ssh-rsa                                                                         
         LDUSER ALL=(ALL) NOPASSWD: LDFUNCS
 
     -- copy the various volume manager helper functions
-    sudo cp ~/src/ld/littledev/devices/disk/funcs/* /usr/local/bin
+    sudo cp ~/src/ld/littledev/devices/disk/funcs/*.py /usr/local/bin
     sudo chown root:root /usr/local/bin/*
     sudo chmod 0550 /usr/local/bin/*
+
+    -- create the RAMdisk for helper function message passing
+    mkdir /tmp/ram
+    sudo chown root:root /tmp/ram
+    sudo chmod a+rwx /tmp/ram
+
+    sudo vi /etc/fstab
+        -- modify (add ABOVE the DYNAMIC VOLUMES line):
+        none /tmp/ram tmpfs rw,auto,nodev,nosuid,noexec,noatime,size=20M 0 0
+
+    sudo mount -a
+    sudo chmod a+rwx /tmp/ram
 
 13. Final cleanup
 
