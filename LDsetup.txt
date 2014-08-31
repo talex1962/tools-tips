@@ -173,7 +173,9 @@ ssh-rsa                                                                         
     sudo umount /dev/sda4
     --------------------------------------------------
 
+    =================================================================================
     === INITIAL BASIC SAMBA FILESERVER TEST
+    =================================================================================
     sudo fdisk /dev/sda
     p (and verify that /dev/sda4 is partition number 4)
     t
@@ -239,7 +241,9 @@ ssh-rsa                                                                         
     Verify that Samba is active and works, and exporting a 5G filesystem
     under testshare. Reboot and verify that it continues to work.
 
-    === ENCRYPTED LVM FILESERVER
+    =================================================================================
+    === ENCRYPTED LVM FILESERVER TEST AND PRE-CONFIG FOR STORAGE MANAGER
+    =================================================================================
     ---- Do following if the test was done above: ----
     sudo service smbd stop
     sudo service nmbd stop
@@ -280,13 +284,15 @@ ssh-rsa                                                                         
     sudo chmod a+rwx /srv/storage/testshare
     sudo vi /etc/fstab
     -- modify:
-        -- comment out line for /dev/sda4
+        -- remove line for /dev/sda4, and add to end:
         /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 0 2
 
     -- set up Samba with a test share:
-    -- add a guest user named storage for anonymous accesses
-    sudo addgroup --system storage
+
+    -- add the storage account for the volume manager for anonymous Samba access
+    -- NOTE: observe the GID from addgroup and put it into adduser
     NOTE: record the GID, normally 128
+    sudo addgroup --system storage
     sudo adduser --system --gid 128 --no-create-home storage
 
     sudo vi /etc/samba/smb.conf
@@ -311,7 +317,7 @@ ssh-rsa                                                                         
             writable = yes
             create mask = 0755
             directory mask = 0777
-    NOTE: comment out all the printer stuff
+    NOTE: smb.conf file will be edited again for the final config below.
 
     sudo service smbd stop
     sudo service smbd start
@@ -408,11 +414,68 @@ ssh-rsa                                                                         
     sudo chmod a+rwx /tmp/ram
 
     sudo vi /etc/fstab
-        -- modify (add ABOVE the DYNAMIC VOLUMES line):
+        -- modify to read similar to:
+        # /etc/fstab: static file system information.
+        # Use 'blkid' to print the UUID for a device
+        #
+        UUID=606e42c8-da72-4a95-b549-454c663473e6 /       ext4    errors=remount-ro 0       1
+        UUID=a7e30ca2-ad0f-4518-b959-d001c292dd3c /boot   ext4    defaults        0       2
+        UUID=7e79b85a-dbd2-41d3-b25e-0e09cda64a2e none    swap    sw              0       0
+        # 20 MB RAMdisk using tmpfs on /tmp/ram for messaging storage
         none /tmp/ram tmpfs rw,auto,nodev,nosuid,noexec,noatime,size=20M 0 0
+        #
+        # The following comment MUST be present for the FS funcs to process this file
+        # DYNAMIC VOLUMES
+        /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 0 2
 
     sudo mount -a
     sudo chmod a+rwx /tmp/ram
+
+    -- set up the smb.conf file
+    sudo vi /etc/samba/smb.conf
+        -- modify to read as:
+            # Little Device Samba config file
+            [global]
+                workgroup = VERIWAVE
+                server string = %h server (Samba, Ubuntu)
+                dns proxy = no
+                interfaces = 127.0.0.0/8 192.168.1.0/24 192.168.2.0/24 192.168.3.0/24 eth1.1 eth1.2 eth1.3
+                bind interfaces only = yes
+                log file = /var/log/samba/log.%m
+                max log size = 1000
+                syslog = 0
+                panic action = /usr/share/samba/panic-action %d
+                server role = standalone server
+                passdb backend = tdbsam
+                obey pam restrictions = yes
+                unix password sync = yes
+                passwd program = /usr/bin/passwd %u
+                passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+                pam password change = yes
+                security = user
+                guest account = storage
+                map to guest = bad user
+                usershare allow guests = yes
+            #
+            # The following comment MUST be present for the Samba funcs to process this file
+            # DYNAMIC SHARES
+            [testshare]
+                comment = Test Volume
+                path = /srv/storage/testshare
+                browsable = yes
+                guest ok = yes
+                read only = no
+                writable = yes
+                create mask = 0755
+                directory mask = 0777
+            # ENDSHARE
+
+    sudo service smbd stop
+    sudo service smbd start
+    sudo service nmbd stop
+    sudo service nmbd start
+
+    smbclient -L localhost
 
 13. Final cleanup
 
