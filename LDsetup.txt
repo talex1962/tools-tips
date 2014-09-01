@@ -163,7 +163,29 @@ ssh-rsa                                                                         
 
     NOTE! NOTE! pinging an external host will not work unless NAT is running!
 
-7. TODO - set up iptables for NAT
+7. Set up iptables for NAT
+
+    BASIC SETUP (clean up later for firewalls) to let internal stuff out:
+
+    sudo vi /etc/rc.local
+        -- add following lines before the 'exit 0':
+        # set up BASIC iptables configuration to NAT out to eth0
+        /sbin/iptables-restore /etc/network/iptables.dat
+        /usr/bin/logger -t IPTABLES iptables restored
+
+    sudo vi /etc/network/iptables.dat
+        -- modify:
+        *filter
+        -A FORWARD -i eth0 -o eth1.1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+        -A FORWARD -i eth0 -o eth1.2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+        -A FORWARD -i eth0 -o eth1.3 -m state --state RELATED,ESTABLISHED -j ACCEPT
+        -A FORWARD -i eth1.1 -o eth0 -j ACCEPT
+        -A FORWARD -i eth1.2 -o eth0 -j ACCEPT
+        -A FORWARD -i eth1.3 -o eth0 -j ACCEPT
+        COMMIT
+        *nat
+        -A POSTROUTING -o eth0 -j MASQUERADE
+        COMMIT
 
 8. File system and service
 
