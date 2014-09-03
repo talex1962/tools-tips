@@ -499,12 +499,92 @@ ssh-rsa                                                                         
 
     smbclient -L localhost
 
-13. Final cleanup
+13. Install supervisord and get it set up
+
+    sudo apt-get install supervisor
+
+    sudo vi /etc/supervisor/conf.d/commsMgr.conf
+        -- modify:
+        [program:commsManager]
+        command=python -u commsManager.py
+        process_name=commsManager
+        directory=/usr/local/lib/ld/littledev
+        stdout_logfile=/tmp/ram/commsConsole.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=500KB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ld-admin
+
+    sudo vi /etc/supervisor/conf.d/diskMgr.conf
+        -- modify:
+        [program:diskManager]
+        command=python -u diskManager.py
+        process_name=diskManager
+        directory=/usr/local/lib/ld/littledev
+        stdout_logfile=/tmp/ram/diskConsole.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=500KB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ld-admin
+
+    sudo vi /etc/supervisor/conf.d/LANMgr.conf
+        -- modify:
+        [program:LANManager]
+        command=python -u LANManager.py
+        process_name=LANManager
+        directory=/usr/local/lib/ld/littledev
+        stdout_logfile=/tmp/ram/LANConsole.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=500KB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ld-admin
+
+14. Move the Python functions to /usr/local and start them with supervisor;
+    also ensure that the JSON DB files exist and are placed in /var/lib/ld/db
+    NOTE: this needs /tmp/ram to exist and hold a RAMdisk
+
+    cd /home/ld-admin/src/ld/littledev/db
+
+    -- generate JSON DBs
+    -- edit LDDB.py, LANDB.py, diskDB.py and ensure DBs set to CREATE mode
+    python LDDB.py
+    python LANDB.py
+    python diskDB.py
+
+    -- copy over the various files to their various locations
+    sudo mkdir /usr/local/lib/ld
+    sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
+    sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
+    sudo chown ld-admin:ld-admin /var/lib/ld /var/lib/ld/db
+    sudo mv /usr/local/lib/ld/littledev/db/*.json /var/lib/ld/db
+    sudo chown ld-admin:ld-admin /var/lib/ld/db/*.json
+
+    -- start off the various manager daemons
+    sudo supervisorctl
+        supervisor> reread
+        supervisor> update
+        supervisor> status
+        supervisor> exit
+
+15. Final cleanup
 
     sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
     sudo reboot
 
-14. Log in and start the daemons
+16. Log in and verify that the daemons are running
 
-    TODO: Daemonize the various daemons and use upstart to add them to the boot
-    process.
+    NOTE: to stop the daemons:
+        sudo supervisorctl
+            supervisor> stop <daemon: commsManager, LANManager, diskManager>
+            supervisor> stop all
+
