@@ -112,21 +112,21 @@ ssh-rsa                                                                         
         subnet 192.168.1.0 netmask 255.255.255.0 {
             range 192.168.1.100 192.168.1.250;
             option routers 192.168.1.1;
-            option domain-name-servers 65.182.224.40, 65.182.224.50;
+            option domain-name-servers 65.182.224.40, 65.182.224.50, 8.8.8.8;
             option domain-name "ldevs.com";
         }
 
         subnet 192.168.2.0 netmask 255.255.255.0 {
             range 192.168.2.100 192.168.2.250;
             option routers 192.168.2.1;
-            option domain-name-servers 65.182.224.40, 65.182.224.50;
+            option domain-name-servers 65.182.224.40, 65.182.224.50, 8.8.8.8;
             option domain-name "ldevs.com";
         }
 
         subnet 192.168.3.0 netmask 255.255.255.0 {
             range 192.168.3.100 192.168.3.250;
             option routers 192.168.3.1;
-            option domain-name-servers 65.182.224.40, 65.182.224.50;
+            option domain-name-servers 65.182.224.40, 65.182.224.50, 8.8.8.8;
             option domain-name "ldevs.com";
         }
 
@@ -143,6 +143,7 @@ ssh-rsa                                                                         
         forwarders {
             65.182.224.40;
             65.182.224.50;
+            8.8.8.8;
                     };
 
     sudo service bind9 restart
@@ -339,6 +340,7 @@ ssh-rsa                                                                         
             writable = yes
             create mask = 0755
             directory mask = 0777
+            public = yes
     NOTE: smb.conf file will be edited again for the final config below.
 
     sudo service smbd stop
@@ -568,6 +570,40 @@ ssh-rsa                                                                         
     sudo chown ld-admin:ld-admin /var/lib/ld /var/lib/ld/db
     sudo mv /usr/local/lib/ld/littledev/db/*.json /var/lib/ld/db
     sudo chown ld-admin:ld-admin /var/lib/ld/db/*.json
+
+    -- edit commsManager.py in /usr/local, change URL, DB and log file targets:
+    sudo vi /usr/local/lib/ld/littledev/commsManager.py
+        -- modify:
+        DEFAULT_REG_SERVER_URL = "http://54.213.214.44:8080"
+        LDDBFile = '/var/lib/ld/db/LDDB.json'
+        LANConfigDBFile = '/var/lib/ld/db/LANConfigDB.json'
+        LANStatusDBFile = '/var/lib/ld/db/LANStatusDB.json'
+        diskConfigDBFile = '/var/lib/ld/db/diskConfigDB.json'
+        diskStatusDBFile = '/var/lib/ld/db/diskStatusDB.json'
+        LOG_LEVEL = logging.INFO
+        LOG_FILE = '/var/log/commsManager.log'
+
+        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
+
+    -- edit diskManager.py in /usr/local, change the DB and log file targets:
+    sudo vi /usr/local/lib/ld/littledev/diskManager.py
+        --modify:
+        diskConfigDBFile = '/var/lib/ld/db/diskConfigDB.json'
+        diskStatusDBFile = '/var/lib/ld/db/diskStatusDB.json'
+        LOG_LEVEL = logging.INFO
+        LOG_FILE = '/var/log/diskManager.log'
+        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
+
+    -- edit LANManager.py in /usr/local, change the DB and log file targets:
+    sudo vi /usr/local/lib/ld/littledev/LANManager.py
+        --modify:
+        LANConfigDBFile = '/var/lib/ld/db/LANConfigDB.json'
+        LANStatusDBFile = '/var/lib/ld/db/LANStatusDB.json'
+        SW_IPADDR = '192.168.1.71'
+        AP_IPADDR = '192.168.1.72'
+        LOG_LEVEL = logging.INFO
+        LOG_FILE = '/var/log/LANManager.log'
+        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
 
     -- start off the various manager daemons
     sudo supervisorctl
