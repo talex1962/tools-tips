@@ -3,34 +3,189 @@ SETTING UP A VM FOR A BACKEND
 
 1. Utilities and Git - install first
 
-sudo apt-get -y install python-pip unzip python-dev python-docutils
-sudo apt-get -y install git
+    sudo apt-get install -y xtitle vim exuberant-ctags git tcpdump
+    sudo apt-get install -y python-pip unzip python-dev python-docutils
+    sudo apt-get install -y git supervisor
 
-2. LD source tree
+2. Django & Apache & MySQL
 
-# go to the root directory into which the subdirectory 'ld' will be created
-git clone https://talex1962@github.com/talex1962/ld.git
-cd ld
-git push -u origin master
+    sudo apt-get install -y python-imaging python-pythonmagick python-markdown python-textile python-django
+    sudo apt-get install -y apache2 apache2-data apache2-mpm-prefork apache2-utils libapache2-mod-wsgi
+    sudo apt-get install -y libmysqlclient-dev libexpat1 ssl-cert
+    sudo apt-get install -y sqlite3 sqlite3-doc
 
-3. Django & Apache & MySQL
+    sudo pip install django
+    sudo pip install MySQL-python
+    sudo pip install httplib2
 
-sudo apt-get -y install python-imaging python-pythonmagick python-markdown python-textile python-django
-sudo apt-get -y install apache2 apache2-data apache2-mpm-prefork apache2-utils libapache2-mod-wsgi
-sudo apt-get -y install libmysqlclient-dev libexpat1 ssl-cert
-sudo apt-get -y install sqlite3 sqlite3-doc
+3. web.py, SQLAlchemy and sqlite3
 
-sudo pip install django
-sudo pip install MySQL-python
-sudo pip install httplib2
+    sudo apt-get install -y sqlite3 sqlite3-doc
+    sudo pip install SQLAlchemy
+    sudo pip install web.py
 
-4. web.py, SQLAlchemy and sqlite3
+4. Final cleanup
 
-sudo apt-get -y install sqlite3 sqlite3-doc
-sudo pip install SQLAlchemy
-sudo pip install web.py
+    sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
 
-5. Final cleanup
+5. ubuntu home directory
 
-sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
+    Edit .bashrc:
 
+        -- comment out PS1= stuff (2 places)
+        -- add 'xtitle AWS-VCIOSERVER2'
+        -- add aliases:
+            alias rm='rm -i'
+            alias gitshow='git show --pretty="format:" --name-only $1'
+            alias update='sudo apt-get -y update && sudo apt-get -y upgrade'
+            alias title=xtitle
+        -- set the cdpath
+            CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/mgmtserver:~/src/ld/mgmtserver/server"
+            -or-
+            CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/vcioserver:~/src/ld/vcioserver/site"
+
+    Edit .vimrc:
+
+        set tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+        set wrapscan wrapmargin=0 wrap linebreak textwidth=0 columns=96
+        set backspace=indent,eol,start
+        set autoindent nosmartindent cindent
+        set ignorecase smartcase
+        set hlsearch
+        set noedcompatible nocompatible nocscopetag
+        set exrc
+        set tags=./tags,../tags,../../tags,../../../tags,~/tags
+        set title
+
+        inoremap # X^H#
+        nnoremap ^] g^]
+
+        syn on
+        filetype plugin on
+        filetype indent on
+
+        let &titlestring = "AWS-VCIOSERVER2" . ": " . expand("%m%t")
+        auto BufEnter * :let &titlestring = "AWS-VCIOSERVER2" . ": " . expand("%m%t")
+        auto VimLeave * :set t_ts="AWS-VCIOSERVER2"
+
+6. LD source tree
+
+    mkdir -p /home/ubuntu/src
+    cd /home/ubuntu/src
+    git clone https://talex1962@github.com/talex1962/ld.git
+    cd ld
+    git push -u origin master
+    git config --global user.name "Tom"
+    git config --global user.email talex1962@gmail.com
+    git config --global push.default matching
+
+7. Permissions
+
+    sudo vi /etc/group
+    -- add ubuntu to adm, sudo, users, fuse, syslog, netdev, ssh
+
+8. For mgmtserver:
+
+    -- create the supervisord config file
+    sudo vi /etc/supervisor/conf.d/mgmtserver.conf
+        -- modify:
+        [program:mgmtserver]
+        command=python -u mgmtAPIServer.py
+        process_name=mgmtserver
+        directory=/usr/local/lib/ld/mgmtserver/server
+        stdout_logfile=/tmp/mgmtserver.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=5MB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ubuntu
+
+    -- generate sqlite3 DB
+    -- NOTE: FIRST edit makeMainDB.py to ensure that settings are correct
+    cd /home/ubuntu/src/ld/mgmtserver/server/db
+    vi makeMainDB.py
+        -- modify:
+            -- site ID
+            -- ld1 ID and guid
+            -- sw1 access
+            -- ap1 access
+            -- disk1 dtotal_size, dfree_size
+    python makeMainDB.py
+    python devLog.py
+    -- now revert the DB-maker to prevent unnecessary Git updates
+    git checkout -- makeMainDB.py
+
+    -- copy over the various mgmtserver files to their various locations
+    sudo mkdir /usr/local/lib/ld
+    sudo cp -r /home/ubuntu/src/ld/libs /usr/local/lib/ld
+    sudo cp -r /home/ubuntu/src/ld/mgmtserver /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
+    sudo chown ubuntu:ubuntu /var/lib/ld /var/lib/ld/db
+    sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/mainDB.db /var/lib/ld/db
+    sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/logDB.json /var/lib/ld/db
+    sudo chown ubuntu:ubuntu /var/lib/ld/db/*
+
+    -- edit mgmtAPIServer.py in /usr/local, adapt to this instance:
+    sudo vi /usr/local/lib/ld/mgmtserver/server/mgmtAPIServer.py
+        -- modify:
+        mainDBFile = '/var/lib/ld/db/mainDB.db'
+        logDBFile = '/var/lib/ld/db/logDB.json'
+        LOG_LEVEL = logging.INFO
+        LOG_FILE = '/var/log/mgmtserver.log'
+
+        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
+
+    -- start off the manager daemon
+    sudo supervisorctl
+        supervisor> reread
+        supervisor> update
+        supervisor> status
+        supervisor> exit
+
+    -- add the new management server to the regserver DB
+    ssh to regserver
+    cd /home/ubuntu/src/ld/regserver/server/db
+    vi regTable.py
+    -- modify:
+        entryDict = { "deviceName": "Marthas Shop",
+                      "authParams": { 'username': 'vcio', 'password': 'whatever' },
+                      "mgmtServerURL": "http://54.68.105.194:8080" }
+        dw.addOrUpdateRegEntry(GUID='9876543210', entryDict=entryDict)
+        print "Created registration DB entry for 'Marthas Shop' GUID '9876543210'"
+
+8. For vcioserver:
+
+    -- ensure django_evolution is installed and everything is up to date
+    sudo pip install django_evolution
+    cd /home/ubuntu/src/ld/vcioserver/site
+    python manage.py syncdb
+    python manage.py collectstatic
+
+    -- verify settings.py is all good
+    vi /home/ubuntu/src/ld/vcioserver/site/apps/settings.py
+        -- review and ensure nothing is out of place
+
+    -- create the supervisord config file
+    sudo vi /etc/supervisor/conf.d/vcioserver.conf
+        -- modify:
+        [program:vcioserver]
+        command=python -u manage.py runserver 0.0.0.0:8000
+        process_name=vcioserver
+        directory=/home/ubuntu/src/ld/vcioserver/site
+        stdout_logfile=/tmp/vcioserver.log
+        stdout_logfile_backups=3
+        stdout_logfile_maxbytes=10MB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ubuntu
+
+    -- start off the manager daemon
+    sudo supervisorctl
+        supervisor> reread
+        supervisor> update
+        supervisor> status
+        supervisor> exit

@@ -402,6 +402,8 @@ ssh-rsa                                                                         
     git clone https://talex1962@github.com/talex1962/ld.git
     cd ld
     git push -u origin master
+    git config --global user.name "Tom"
+    git config --global user.email talex1962@gmail.com
     cd littledev
     mkdir logs
     vi commsManager.py
@@ -575,6 +577,8 @@ ssh-rsa                                                                         
     sudo vi /usr/local/lib/ld/littledev/commsManager.py
         -- modify:
         DEFAULT_REG_SERVER_URL = "http://54.213.214.44:8080"
+        GUID = '9876543210'
+        DEVICE_NAME = 'Marthas Shop'
         LDDBFile = '/var/lib/ld/db/LDDB.json'
         LANConfigDBFile = '/var/lib/ld/db/LANConfigDB.json'
         LANStatusDBFile = '/var/lib/ld/db/LANStatusDB.json'
@@ -582,7 +586,6 @@ ssh-rsa                                                                         
         diskStatusDBFile = '/var/lib/ld/db/diskStatusDB.json'
         LOG_LEVEL = logging.INFO
         LOG_FILE = '/var/log/commsManager.log'
-
         configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
 
     -- edit diskManager.py in /usr/local, change the DB and log file targets:
@@ -622,5 +625,6 @@ ssh-rsa                                                                         
     NOTE: to stop the daemons:
         sudo supervisorctl
             supervisor> stop <daemon: commsManager, LANManager, diskManager>
+                - or -
             supervisor> stop all
 
