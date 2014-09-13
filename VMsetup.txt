@@ -43,6 +43,8 @@ SETTING UP A VM FOR A BACKEND
             CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/mgmtserver:~/src/ld/mgmtserver/server"
             -or-
             CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/vcioserver:~/src/ld/vcioserver/site"
+            -or-
+            CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/regserver:~/src/ld/regserver/server"
 
     Edit .vimrc:
 
@@ -84,7 +86,61 @@ SETTING UP A VM FOR A BACKEND
     sudo vi /etc/group
     -- add ubuntu to adm, sudo, users, fuse, syslog, netdev, ssh
 
-8. For mgmtserver:
+8. For regserver:
+
+    -- create the supervisord config file
+    sudo vi /etc/supervisor/conf.d/regserver.conf
+        -- modify:
+        [program:regserver]
+        command=python -u regserver.py
+        process_name=regserver
+        directory=/usr/local/lib/ld/regserver/server
+        stdout_logfile=/tmp/regserver.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=5MB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ubuntu
+
+    -- generate JSON DB
+    -- NOTE: FIRST edit regTable.py to ensure that settings are correct
+    cd /home/ubuntu/src/ld/regserver/server/db
+    vi regTable.py
+        -- modify:
+            -- entryDict for each device
+            -- write entryDict into JSON DB for each device
+    python regTable.py
+    -- now revert the DB-maker to prevent unnecessary Git updates
+    git checkout -- regTable.py
+
+    -- copy over the various regserver files to their various locations
+    sudo mkdir /usr/local/lib/ld
+    sudo cp -r /home/ubuntu/src/ld/libs /usr/local/lib/ld
+    sudo cp -r /home/ubuntu/src/ld/regserver /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
+    sudo chown ubuntu:ubuntu /var/lib/ld /var/lib/ld/db
+    sudo cp /home/ubuntu/src/ld/regserver/server/db/regDB.json /var/lib/ld/db
+    sudo chown ubuntu:ubuntu /var/lib/ld/db/*
+
+    -- edit regServer.py in /usr/local, adapt to this instance:
+    sudo vi /usr/local/lib/ld/regserver/server/regserver.py
+        -- modify:
+        regDBFile = '/var/lib/ld/db/regDB.db'
+        LOG_LEVEL = logging.INFO
+        LOG_FILE = '/var/log/regserver.log'
+
+        configureLogging(logfile=LOG_FILE, fileLevel=LOG_LEVEL, consoleLevel='WARNING')
+
+    -- start off the regserver daemon
+    sudo supervisorctl
+        supervisor> reread
+        supervisor> update
+        supervisor> status
+        supervisor> exit
+
+9. For mgmtserver:
 
     -- create the supervisord config file
     sudo vi /etc/supervisor/conf.d/mgmtserver.conf
@@ -135,7 +191,7 @@ SETTING UP A VM FOR A BACKEND
         LOG_LEVEL = logging.INFO
         LOG_FILE = '/var/log/mgmtserver.log'
 
-        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
+        configureLogging(logfile=LOG_FILE, fileLevel=LOG_LEVEL, consoleLevel='WARNING')
 
     -- start off the manager daemon
     sudo supervisorctl
@@ -155,7 +211,7 @@ SETTING UP A VM FOR A BACKEND
         dw.addOrUpdateRegEntry(GUID='9876543210', entryDict=entryDict)
         print "Created registration DB entry for 'Marthas Shop' GUID '9876543210'"
 
-8. For vcioserver:
+10. For vcioserver:
 
     -- ensure django_evolution is installed and everything is up to date
     sudo pip install django_evolution
