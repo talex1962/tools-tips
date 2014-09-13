@@ -226,6 +226,11 @@ SETTING UP A VM FOR A BACKEND
         -- review and ensure nothing is out of place
         -- make sure logging goes to the right place
 
+    -- add MYIPADDR to .bashrc
+    # set environment variable to indicate IP address of this host, for Django
+    MYIPADDR="54.68.66.127"
+    export MYIPADDR
+
     -- create the supervisord config file
     sudo vi /etc/supervisor/conf.d/vcioserver.conf
         -- modify:

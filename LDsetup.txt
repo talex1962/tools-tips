@@ -100,6 +100,9 @@ ssh-rsa                                                                         
         # use the router on 192.168.0.1 as the default gateway
         up route add default gw 192.168.0.1
 
+    -- remove NetworkManager
+    sudo apt-get purge -y network-manager
+
 5. Set up DHCP and DNS services
 
     sudo vi /etc/dhcp/dhcpd.conf
