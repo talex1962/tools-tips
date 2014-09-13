@@ -128,7 +128,7 @@ SETTING UP A VM FOR A BACKEND
     sudo vi /usr/local/lib/ld/regserver/server/regserver.py
         -- modify:
         regDBFile = '/var/lib/ld/db/regDB.db'
-        LOG_LEVEL = logging.INFO
+        LOG_LEVEL = 'INFO'
         LOG_FILE = '/var/log/regserver.log'
 
         configureLogging(logfile=LOG_FILE, fileLevel=LOG_LEVEL, consoleLevel='WARNING')
@@ -188,7 +188,7 @@ SETTING UP A VM FOR A BACKEND
         -- modify:
         mainDBFile = '/var/lib/ld/db/mainDB.db'
         logDBFile = '/var/lib/ld/db/logDB.json'
-        LOG_LEVEL = logging.INFO
+        LOG_LEVEL = 'INFO'
         LOG_FILE = '/var/log/mgmtserver.log'
 
         configureLogging(logfile=LOG_FILE, fileLevel=LOG_LEVEL, consoleLevel='WARNING')
@@ -222,6 +222,7 @@ SETTING UP A VM FOR A BACKEND
     -- verify settings.py is all good
     vi /home/ubuntu/src/ld/vcioserver/site/apps/settings.py
         -- review and ensure nothing is out of place
+        -- make sure logging goes to the right place
 
     -- create the supervisord config file
     sudo vi /etc/supervisor/conf.d/vcioserver.conf
