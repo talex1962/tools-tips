@@ -85,6 +85,8 @@ SETTING UP A VM FOR A BACKEND
 
     sudo vi /etc/group
     -- add ubuntu to adm, sudo, users, fuse, syslog, netdev, ssh
+    sudo chgrp syslog /var/log
+    sudo chmod ug+w /var/log
 
 8. For regserver:
 
