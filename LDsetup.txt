@@ -555,6 +555,8 @@ ssh-rsa                                                                         
         startretries=1000
         user=ld-admin
 
+    NOTE: don't start the daemons yet.
+
 14. Move the Python functions to /usr/local and start them with supervisor;
     also ensure that the JSON DB files exist and are placed in /var/lib/ld/db
     NOTE: this needs /tmp/ram to exist and hold a RAMdisk
@@ -573,45 +575,34 @@ ssh-rsa                                                                         
     sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
     sudo mkdir -p /var/lib/ld/db
     sudo chown ld-admin:ld-admin /var/lib/ld /var/lib/ld/db
-    sudo mv /usr/local/lib/ld/littledev/db/*.json /var/lib/ld/db
+    sudo cp /usr/local/lib/ld/littledev/db/*.json /var/lib/ld/db
     sudo chown ld-admin:ld-admin /var/lib/ld/db/*.json
+    sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
+    sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
 
-    -- edit commsManager.py in /usr/local, change URL, DB and log file targets:
-    sudo vi /usr/local/lib/ld/littledev/commsManager.py
+    -- edit LDConfig.ini in /usr/local/etc and adapt to new LD + system dirs
+    sudo vi /usr/local/etc/LDConfig.ini
         -- modify:
-        DEFAULT_REG_SERVER_URL = "http://54.213.214.44:8080"
-        GUID = '9876543210'
-        DEVICE_NAME = 'Marthas Shop'
-        LDDBFile = '/var/lib/ld/db/LDDB.json'
-        LANConfigDBFile = '/var/lib/ld/db/LANConfigDB.json'
-        LANStatusDBFile = '/var/lib/ld/db/LANStatusDB.json'
-        diskConfigDBFile = '/var/lib/ld/db/diskConfigDB.json'
-        diskStatusDBFile = '/var/lib/ld/db/diskStatusDB.json'
-        LOG_LEVEL = logging.INFO
-        LOG_FILE = '/var/log/commsManager.log'
-        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
+        fileLogLevel = INFO
+        consoleLogLevel = WARNING
+        LDDBFile = /var/lib/ld/db/LDDB.json
+        LANConfigDBFile = /var/lib/ld/db/LANConfigDB.json
+        LANStatusDBFile = /var/lib/ld/db/LANStatusDB.json
+        diskConfigDBFile = /var/lib/ld/db/diskConfigDB.json
+        diskStatusDBFile = /var/lib/ld/db/diskStatusDB.json
+        [COMMSMGR]
+        logFile = /var/log/commsManager.log
+        GUID = 0123456789
+        [LANMGR]
+        logFile = /var/log/LANManager.log
+        [DISKMGR]
+        logFile = /var/log/diskManager.log
+        [DEVICE0]
+        IPAddr = 192.168.1.72
+        [DEVICE1]
+        IPAddr = 192.168.1.71
 
-    -- edit diskManager.py in /usr/local, change the DB and log file targets:
-    sudo vi /usr/local/lib/ld/littledev/diskManager.py
-        --modify:
-        diskConfigDBFile = '/var/lib/ld/db/diskConfigDB.json'
-        diskStatusDBFile = '/var/lib/ld/db/diskStatusDB.json'
-        LOG_LEVEL = logging.INFO
-        LOG_FILE = '/var/log/diskManager.log'
-        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
-
-    -- edit LANManager.py in /usr/local, change the DB and log file targets:
-    sudo vi /usr/local/lib/ld/littledev/LANManager.py
-        --modify:
-        LANConfigDBFile = '/var/lib/ld/db/LANConfigDB.json'
-        LANStatusDBFile = '/var/lib/ld/db/LANStatusDB.json'
-        SW_IPADDR = '192.168.1.71'
-        AP_IPADDR = '192.168.1.72'
-        LOG_LEVEL = logging.INFO
-        LOG_FILE = '/var/log/LANManager.log'
-        configureLogging(logfile=LOG_FILE, fileLevel='INFO', consoleLevel='WARNING')
-
-    -- start off the various manager daemons
+    -- now start off the various manager daemons
     sudo supervisorctl
         supervisor> reread
         supervisor> update
