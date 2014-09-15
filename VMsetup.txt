@@ -97,7 +97,7 @@ SETTING UP A VM FOR A BACKEND
         command=python -u regserver.py
         process_name=regserver
         directory=/usr/local/lib/ld/regserver/server
-        stdout_logfile=/tmp/regserver.log
+        stdout_logfile=/tmp/regConsole.log
         stdout_logfile_backups=1
         stdout_logfile_maxbytes=5MB
         redirect_stderr=true
@@ -151,7 +151,7 @@ SETTING UP A VM FOR A BACKEND
         command=python -u mgmtAPIServer.py
         process_name=mgmtserver
         directory=/usr/local/lib/ld/mgmtserver/server
-        stdout_logfile=/tmp/mgmtserver.log
+        stdout_logfile=/tmp/mgmtConsole.log
         stdout_logfile_backups=1
         stdout_logfile_maxbytes=5MB
         redirect_stderr=true
@@ -190,11 +190,11 @@ SETTING UP A VM FOR A BACKEND
     -- edit mgmtConfig.ini in /usr/local, adapt to this instance:
     sudo vi /usr/local/etc/mgmtConfig.ini
         -- modify:
-        fileLogLevel = 'INFO'
-        consoleLogLevel = 'WARNING'
-        mainDBFile = '/var/lib/ld/db/mainDB.db'
-        logDBFile = '/var/lib/ld/db/logDB.json'
-        logFile = '/var/log/mgmtserver.log'
+        fileLogLevel = INFO
+        consoleLogLevel = WARNING
+        mainDBFile = /var/lib/ld/db/mainDB.db
+        logDBFile = /var/lib/ld/db/logDB.json
+        logFile = /var/log/mgmtserver.log
 
     -- start off the manager daemon
     sudo supervisorctl
@@ -239,7 +239,7 @@ SETTING UP A VM FOR A BACKEND
         command=python -u manage.py runserver 0.0.0.0:8000
         process_name=vcioserver
         directory=/home/ubuntu/src/ld/vcioserver/site
-        stdout_logfile=/tmp/vcioserver.log
+        stdout_logfile=/tmp/vcioConsole.log
         stdout_logfile_backups=3
         stdout_logfile_maxbytes=10MB
         redirect_stderr=true
