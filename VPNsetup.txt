@@ -1,0 +1,56 @@
+VPN Setup with SoftEther
+------------------------
+
+1. On AWS management server:
+    - get server files into /home/ubuntu:
+        softether-vpnserver-v4.08-9449-rtm-2014.06.08-linux-x64-64bit.tar.gz
+        vpnscripts.tar.gz
+    - untar server files into /usr/local:
+        cd /usr/local
+        tar zxvf /home/ubuntu/softether-vpnserver-v4.08-9449-rtm-2014.06.08-linux-x64-64bit.tar.gz
+    - make the VPN software
+        cd /usr/local/vpnserver
+        sudo make
+    - untar scripts into /usr/local/bin:
+        cd /usr/local/bin
+        sudo tar zxvf /home/ubuntu/vpnscripts.tar.gz
+        sudo chown root:root vpn* server_setup manage_vpn
+        sudo chmod o-rx vpn* server_setup manage_vpn
+        sudo chmod g-w vpn* server_setup manage_vpn
+    - run manage_vpn to install the VPN server on boot and enter a password:
+        sudo manage_vpn add_server
+    - verify that the VPN server is running:
+        ps aux | grep vpn
+    - run manage_vpn to set the server password:
+        sudo manage_vpn password
+            - set the password to Friday2014
+    - configure the VPN server with the virtual hubs:
+        sudo server_setup <password>
+            - set the password to Friday2014
+            - check the output and verify that there are 3 hubs
+
+2. On Little Device:
+    - get bridge files into /home/ld-admin:
+        softether-vpnbridge-v4.08-9449-rtm-2014.06.08-linux-x86-32bit.tar.gz
+        vpnscripts.tar.gz
+    - untar bridge files into /usr/local:
+        cd /usr/local
+        tar zxvf /home/ld-admin/softether-vpnbridge-v4.08-9449-rtm-2014.06.08-linux-x86-32bit.tar.gz
+    - make the VPN software:
+        cd /usr/local/vpnbridge
+        sudo make
+    - untar scripts into /usr/local/bin:
+        cd /usr/local/bin
+        sudo tar zxvf /home/ubuntu/vpnscripts.tar.gz
+        sudo chown root:root vpn* server_setup manage_vpn
+        sudo chmod o-rx vpn* server_setup manage_vpn
+        sudo chmod g-w vpn* server_setup manage_vpn
+    - run manage_vpn to install the VPN bridge on boot and enter a password:
+        sudo manage_vpn add_bridge
+        set the password to Friday2014
+    - verify that the VPN bridge is running:
+        ps aux | grep vpn
+
+3. Install 
+
+3. Configure VPN server on management server with standard config:
