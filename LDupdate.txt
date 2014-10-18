@@ -2,12 +2,12 @@ UPDATING A LITTLE DEVICE
 ------------------------
 
 NOTE: login to 192.168.1.1 or 192.168.2.1 as 'ld-admin', password 'friday' for all commands
+NOTE: the sudo password is 'friday'
 
 1. Update the LD source tree
 
     cd /home/ld-admin/src/ld
     git pull origin
-
         -- Git password is 'friday44'
 
 2. Update the local JSON databases
@@ -19,9 +19,13 @@ NOTE: login to 192.168.1.1 or 192.168.2.1 as 'ld-admin', password 'friday' for a
 
 3. Move new Python functions to /usr/local/lib/ld, and new JSON DBs to /var/lib/ld/db
 
-    -- copy over the various files to their various locations
-    -- NOTE: the sudo password is 'friday'
+    -- stop the manager daemons
+    sudo supervisorctl
+        supervisor> stop all
+        supervisor> status
+        supervisor> exit
 
+    -- copy over the various files to their various locations
     cd /home/ld-admin/src/ld/littledev/db
     sudo cp -r /home/ld-admin/src/ld/libs/* /usr/local/lib/ld
     sudo cp -r /home/ld-admin/src/ld/littledev/* /usr/local/lib/ld
@@ -32,12 +36,8 @@ NOTE: login to 192.168.1.1 or 192.168.2.1 as 'ld-admin', password 'friday' for a
     sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
 
     -- edit LDConfig.ini in /usr/local/etc and adapt to new LD + system dirs
-
     sudo vi /usr/local/etc/LDConfig.ini
-
         -- modify the items listed below (LEAVE OTHERS ALONE!):
-        -- NOTE: these are likely to be unchanged from the existing
-
         fileLogLevel = INFO
         consoleLogLevel = WARNING
         LDDBFile = /var/lib/ld/db/LDDB.json
@@ -64,8 +64,7 @@ NOTE: login to 192.168.1.1 or 192.168.2.1 as 'ld-admin', password 'friday' for a
         type = switch
         IPAddr = 192.168.1.64
 
-    -- now restart the various manager daemons
-
+    -- restart the various manager daemons
     sudo supervisorctl
         supervisor> reread
         supervisor> update
@@ -85,8 +84,7 @@ NOTE: login to 192.168.1.1 or 192.168.2.1 as 'ld-admin', password 'friday' for a
 5. Log in again as ld-admin and verify that the daemons are running
 
     ps aux | grep python
-
-    -- should see lines with 'commsManager', 'diskManager', 'LANManager'
+        -- should see lines with 'commsManager', 'diskManager', 'LANManager'
 
     NOTE: to stop the daemons:
         sudo supervisorctl

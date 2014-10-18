@@ -1,0 +1,175 @@
+Demo Setup #1:
+-------------
+
+HW:
+    Management server: ec2-54-201-71-184.us-west-2.compute.amazonaws.com (54.201.71.184)
+    vCIO GUI server: ec2-54-187-12-44.us-west-2.compute.amazonaws.com (54.187.12.44)
+
+    LittleDevice3: 192.168.0.70 login ld-admin/friday (or admin/friday, tom/friday) static IP
+    Switch: 192.168.1.71 admin/admin
+    AP: 192.168.1.72 admin/admin
+
+    littledev: 192.168.0.50 ld-admin/friday
+    eth1 currently set to 192.168.1.1 no VLAN
+
+Logical Setup:
+    GUI admin: http://http://54.187.12.44:8000/admin/
+        Login as: tom / friday
+
+    Vcio: Joe (password friday)
+
+    Vcio Customer ID 1: Santas Haircuts
+        Business name: Santas Haircuts
+        Mailing address: someaddress
+        Phone number: 5035551212
+        Primary contact: Santa
+        E-mail address: santa@north-pole.com
+        Registration server: http://54.213.214.44:8080
+        Management server: http://54.201.71.184:8080
+        Use fake data: no
+
+        Vcio Customer 1 Sites:
+            Customer Site ID 1: Santas Shop
+            Unique ID of Little Device (GUID): 0123456789
+            Physical address: 6990 South Nimbus, Beaverton, 97008
+            Primary contact: Mr Santa
+            Phone number: 503-663-9517
+            E-mail address: santa@north-pole.com
+            Public IP subnet: 192.168.0.0
+
+    Vcio Customer ID 2: Marthas Cakes
+        Business name: N/A
+        Mailing address: N/A
+        Phone number: N/A
+        Primary contact: N/A
+        E-mail address: N/A
+        Registration server: http://172.31.35.42:8080
+        Management server: http://172.31.13.179:8080
+        Use fake data: yes
+
+        Vcio Customer 2 Sites:
+            Customer Site ID 1: Marthas Shop
+            Unique ID of Little Device (GUID): N/A
+            Physical address: 2770 S Buena Park, Tigard, OR 97723
+            Primary contact: N/A
+            Phone number: N/A
+            E-mail address: N/A
+            Public IP subnet: 71.235.224.0
+
+    Vcio Customer ID 3: Jacks Burgers
+        Business name: N/A
+        Mailing address: N/A
+        Phone number: N/A
+        Primary contact: N/A
+        E-mail address: N/A
+        Registration server: http://172.31.35.42:8080
+        Management server: http://172.31.13.179:8080
+        Use fake data: yes
+
+        Vcio Customer 3 Sites:
+            Customer Site ID 1: Jacks Indoor Network
+            Unique ID of Little Device (GUID): N/A
+            Physical address: 276 East Church Ave, Gresham, OR 97011
+            Primary contact: Jack Sprat
+            Phone number: 503-253-2231
+            E-mail address: jack@burgers.com
+            Public IP subnet: 76.223.11.0
+
+            Customer Site ID 2: Jacks Outdoor Network
+            Unique ID of Little Device (GUID): N/A
+            Physical address: 276 East Church Ave, Gresham, OR 97011
+            Primary contact: N/A
+            Phone number: N/A
+            E-mail address: N/A
+            Public IP subnet: 76.223.11.0
+
+            Customer Site ID 3: Jacks Guest Network
+            Unique ID of Little Device (GUID): 11111111
+            Physical address: N/A
+            Primary contact: N/A
+            Phone number: N/A
+            E-mail address: N/A
+            Public IP subnet: N/A
+
+    Vcio Customer ID 4: Sandy Grocer
+        Business name: The Sandman Grocery Store
+        Mailing address: N/A
+        Phone number: N/A
+        Primary contact: N/A
+        E-mail address: N/A
+        Registration server: http://172.31.35.42:8080
+        Management server: http://172.31.13.179:8080
+        Use fake data: yes
+
+        Vcio Customer 4 Sites:
+            Customer Site ID 1: Sandiferous
+            Unique ID of Little Device (GUID): 26362456
+            Physical address: Molalla
+            Primary contact: Carol Sanders
+            Phone number: 503-711-7080
+            E-mail address: carol@sanders.com
+            Public IP subnet: N/A
+
+
+Demo Setup #2:
+-------------
+
+HW:
+    Management server: ec2-54-68-105-194.us-west-2.compute.amazonaws.com (54.68.105.19)
+    vCIO GUI server: ec2-54-68-66-127.us-west-2.compute.amazonaws.com (54.68.66.127)
+
+    LittleDevice4: ld-admin/friday, DHCP address
+    Switch: 192.168.1.64 admin/admin gateway 192.168.1.1
+    AP: 192.168.1.63 admin/admin gateway 192.168.1.1
+
+Logical Setup:
+    GUI admin: http://http://54.187.12.44:8000/admin/
+        Login as: tom / friday
+
+    Vcio: Joe (password friday)
+
+    Vcio Customer ID 1: Marthas Cakes
+        Business name: Marthas Cake Shop
+        Mailing address: 8700 North Nimbus Ave Beaverton OR 97008
+        Phone number: 5038033534
+        Primary contact: Martha
+        E-mail address: martha@martha.com
+        Registration server: http://54.213.214.44:8080
+        Management server: http://54.68.105.194:8080
+        Use fake data: no
+
+        Vcio Customer 1 Sites:
+            Customer Site ID 1: Marthas Shop
+            Unique ID of Little Device (GUID): 9876543210
+            Physical address: 8700 NW Nimbus Ave Beaverton 97008
+            Primary contact: Martha
+            Phone number: 5038033534
+            E-mail address: martha@martha.com
+            Public IP subnet: 192.168.0.0
+
+    Vcio Customer ID 2: Bills Autos
+        Business name: Bills Auto Repair
+        Mailing address: 256 SW Billiam Ave Portland OR 97223
+        Phone number: 5038033534
+        Primary contact: Bill the Man
+        E-mail address: bill@bill.com
+        Registration server: http://172.31.35.42:8080
+        Management server: http://172.31.13.179:8080
+        Use fake data: yes
+
+        Vcio Customer 2 Sites:
+            Customer Site ID 1: Bills Garage
+            Unique ID of Little Device (GUID): 111111111
+            Physical address: 123 Billiam Lane, Portland OR 97223
+            Primary contact: Bill The Man
+            Phone number: 5038033534
+            E-mail address: bill@bill.com
+            Public IP subnet: 192.168.0.0
+
+            Customer Site ID 2: Bills Home
+            Unique ID of Little Device (GUID): 22222222
+            Physical address: 414 Bill Lane, Portland OR 97223
+            Primary contact: Bill The Man
+            Phone number: 5038033534
+            E-mail address: bill@bill.com
+            Public IP subnet: 192.168.0.0
