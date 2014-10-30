@@ -67,41 +67,49 @@ UPDATING A BACKEND VM
         supervisor> status
         supervisor> exit
 
-    -- edit makeMainDB.py to ensure that settings are correct
-    cd /home/ubuntu/src/ld/mgmtserver/server/db
-    vi makeMainDB.py
-        -- modify:
-            -- site ID
-            -- ld1 ID and guid
-            -- sw1 access
-            -- ap1 access
-            -- disk1 dtotal_size, dfree_size
-
-    -- generate sqlite3 and JSON DBs
-    python makeMainDB.py
-    python devLog.py
-    -- now revert the DB-maker to prevent unnecessary Git updates
-    git checkout -- makeMainDB.py
-
     -- copy over the various mgmtserver files to their various locations
-    sudo mkdir /usr/local/lib/ld
+    sudo mkdir -p /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
     sudo cp -r /home/ubuntu/src/ld/libs /usr/local/lib/ld
     sudo cp -r /home/ubuntu/src/ld/mgmtserver /usr/local/lib/ld
-    sudo chown -R ubuntu:ubuntu /var/lib/ld /var/lib/ld/db
-    sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/mainDB.db /var/lib/ld/db
-    sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/logDB.json /var/lib/ld/db
-    sudo chown -R ubuntu:ubuntu /var/lib/ld/db/*
+
+    -- copy over the master configuration file and edit to match site needs:
     sudo rm -f /usr/local/lib/ld/mgmtserver/server/mgmtConfig.ini
     sudo cp /home/ubuntu/src/ld/mgmtserver/server/mgmtConfig.ini /usr/local/etc
 
-    -- edit mgmtConfig.ini in /usr/local, adapt to run on VM:
     sudo vi /usr/local/etc/mgmtConfig.ini
-        -- modify:
+        -- modify as follows (leave rest unchanged):
+        [DEFAULT]
+        DBPath = /var/lib/ld/db
+        logPath = /var/log
+
+        [MAIN]
         fileLogLevel = INFO
         consoleLogLevel = WARNING
-        mainDBFile = /var/lib/ld/db/mainDB.db
-        logDBFile = /var/lib/ld/db/logDB.json
-        logFile = /var/log/mgmtserver.log
+        defaultSites = yes
+
+        [SITE0]
+        GUID = 9876543210
+        name = Marthas Cakes
+
+        [DEVICE0]
+        IPAddr = 192.168.1.64
+
+        [DEVICE1]
+        IPAddr = 192.168.1.65
+
+        [DEVICE2]
+        size = 20.0
+
+    -- recreate the logDB database
+    cd /home/ubuntu/src/ld/mgmtserver/server/db
+    python devLog.py
+    sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/logDB.json /var/lib/ld/db
+
+    -- regenerate sqlite3 DB
+    cd /usr/local/lib/ld/mgmtserver/db
+    python makeMainDB.py
+    sudo chown -R ubuntu:ubuntu /var/lib/ld
 
     -- restart the manager daemon
     sudo supervisorctl

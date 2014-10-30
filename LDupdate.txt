@@ -10,14 +10,7 @@ NOTE: the sudo password is 'friday'
     git pull origin
         -- Git password is 'friday44'
 
-2. Update the local JSON databases
-
-    cd /home/ld-admin/src/ld/littledev/db
-    python LDDB.py
-    python LANDB.py
-    python diskDB.py
-
-3. Move new Python functions to /usr/local/lib/ld, and new JSON DBs to /var/lib/ld/db
+2. Move new Python functions to /usr/local/lib/ld and make new JSON DBs in /var/lib/ld/db
 
     -- stop the manager daemons
     sudo supervisorctl
@@ -26,35 +19,27 @@ NOTE: the sudo password is 'friday'
         supervisor> exit
 
     -- copy over the various files to their various locations
-    cd /home/ld-admin/src/ld/littledev/db
-    sudo cp -r /home/ld-admin/src/ld/libs/* /usr/local/lib/ld
-    sudo cp -r /home/ld-admin/src/ld/littledev/* /usr/local/lib/ld
-    sudo chown -R ld-admin:ld-admin /var/lib/ld /var/lib/ld/db
-    sudo cp /usr/local/lib/ld/littledev/db/*.json /var/lib/ld/db
-    sudo chown ld-admin:ld-admin /var/lib/ld/db/*.json
+    sudo mkdir -p /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
+    sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
+    sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
+
+    -- edit LDConfig.ini in /usr/local/etc and adapt to the specific site
     sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
     sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
-
-    -- edit LDConfig.ini in /usr/local/etc and adapt to new LD + system dirs
     sudo vi /usr/local/etc/LDConfig.ini
-        -- modify the items listed below (LEAVE OTHERS ALONE!):
+        -- modify the items in the various sections as below (LEAVE OTHERS ALONE!):
+        [DEFAULT]
+        DBPath = /var/lib/ld/db
+        logPath = /var/log
+
+        [MAIN]
         fileLogLevel = INFO
         consoleLogLevel = WARNING
-        LDDBFile = /var/lib/ld/db/LDDB.json
-        LANConfigDBFile = /var/lib/ld/db/LANConfigDB.json
-        LANStatusDBFile = /var/lib/ld/db/LANStatusDB.json
-        diskConfigDBFile = /var/lib/ld/db/diskConfigDB.json
-        diskStatusDBFile = /var/lib/ld/db/diskStatusDB.json
 
         [COMMSMGR]
-        logFile = /var/log/commsManager.log
-        GUID = 9876543210
-
-        [LANMGR]
-        logFile = /var/log/LANManager.log
-
-        [DISKMGR]
-        logFile = /var/log/diskManager.log
+        GUID = 0123456789
+        deviceName = Marthas Cakes
 
         [DEVICE0]
         type = AP
@@ -64,6 +49,15 @@ NOTE: the sudo password is 'friday'
         type = switch
         IPAddr = 192.168.1.64
 
+        [DEVICE2]
+        type = disk
+        size = 20.0
+
+    -- create the JSON device databases
+    cd /usr/local/lib/ld/littledev/db
+    sudo python makeLDDB.py
+    sudo chown -R ld-admin:ld-admin /var/lib/ld
+
     -- restart the various manager daemons
     sudo supervisorctl
         supervisor> reread
@@ -71,24 +65,28 @@ NOTE: the sudo password is 'friday'
         supervisor> restart
         supervisor> status
             -- this should show RUNNING for all three daemons
-            -- now wait for 5 seconds and do
+            -- note process IDs, now wait for 5 seconds
         supervisor> status
             -- this should still show RUNNING for all three daemons
-            -- the process IDs should be the same as the previous display
+            -- the process IDs should be the same as before
         supervisor> exit
 
-4. Final cleanup and reboot
+3. Final cleanup and reboot
 
     sudo reboot
 
-5. Log in again as ld-admin and verify that the daemons are running
+4. Log in again as ld-admin and verify that the daemons are running
 
     ps aux | grep python
         -- should see lines with 'commsManager', 'diskManager', 'LANManager'
 
-    NOTE: to stop the daemons:
+    NOTE: to stop and/or restart the daemons:
         sudo supervisorctl
             supervisor> stop <daemon: commsManager, LANManager, diskManager>
                 - or -
             supervisor> stop all
+
+            supervisor> restart <daemon: commsManager, LANManager, diskManager>
+                - or -
+            supervisor> restart all
 

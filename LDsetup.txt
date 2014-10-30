@@ -409,13 +409,6 @@ ssh-rsa                                                                         
     git config --global user.email talex1962@gmail.com
     cd littledev
     mkdir logs
-    vi commsManager.py
-    -- modify the IP addresses to match that of the switch, AP and VMs
-    cd db
-    vi LDDB.py LANDB.py
-    -- modify the IP addresses and URLs to match that of the devices and VMs
-    python LDDB.py
-    python LANDB.py
 
 12. Volume manager functions
 
@@ -561,46 +554,45 @@ ssh-rsa                                                                         
     also ensure that the JSON DB files exist and are placed in /var/lib/ld/db
     NOTE: this needs /tmp/ram to exist and hold a RAMdisk
 
-    cd /home/ld-admin/src/ld/littledev/db
-
-    -- generate JSON DBs
-    -- edit LDDB.py, LANDB.py, diskDB.py and ensure DBs set to CREATE mode
-    python LDDB.py
-    python LANDB.py
-    python diskDB.py
-
     -- copy over the various files to their various locations
-    sudo mkdir /usr/local/lib/ld
+    sudo mkdir -p /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
     sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
     sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
-    sudo mkdir -p /var/lib/ld/db
-    sudo chown ld-admin:ld-admin /var/lib/ld /var/lib/ld/db
-    sudo cp /usr/local/lib/ld/littledev/db/*.json /var/lib/ld/db
-    sudo chown ld-admin:ld-admin /var/lib/ld/db/*.json
+
+    -- edit LDConfig.ini in /usr/local/etc and adapt to the specific site
     sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
     sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
-
-    -- edit LDConfig.ini in /usr/local/etc and adapt to new LD + system dirs
     sudo vi /usr/local/etc/LDConfig.ini
         -- modify:
+        [DEFAULT]
+        DBPath = /var/lib/ld/db
+        logPath = /var/log
+
+        [MAIN]
         fileLogLevel = INFO
         consoleLogLevel = WARNING
-        LDDBFile = /var/lib/ld/db/LDDB.json
-        LANConfigDBFile = /var/lib/ld/db/LANConfigDB.json
-        LANStatusDBFile = /var/lib/ld/db/LANStatusDB.json
-        diskConfigDBFile = /var/lib/ld/db/diskConfigDB.json
-        diskStatusDBFile = /var/lib/ld/db/diskStatusDB.json
+
         [COMMSMGR]
-        logFile = /var/log/commsManager.log
-        GUID = 0123456789
-        [LANMGR]
-        logFile = /var/log/LANManager.log
-        [DISKMGR]
-        logFile = /var/log/diskManager.log
+        GUID = 9876543210
+        deviceName = Marthas Cakes
+
         [DEVICE0]
-        IPAddr = 192.168.1.72
+        type = AP
+        IPAddr = 192.168.1.63
+
         [DEVICE1]
-        IPAddr = 192.168.1.71
+        type = switch
+        IPAddr = 192.168.1.64
+
+        [DEVICE2]
+        type = disk
+        size = 20.0
+
+    -- create the JSON device databases
+    cd /usr/local/lib/ld/littledev/db
+    sudo python makeLDDB.py
+    sudo chown -R ld-admin:ld-admin /var/lib/ld
 
     -- now start off the various manager daemons
     sudo supervisorctl
