@@ -206,6 +206,14 @@ SETTING UP A VM FOR A BACKEND
     sudo python makeMainDB.py
     sudo chown -R ubuntu:ubuntu /var/lib/ld
 
+    -- set permissions on /var/log and make ubuntu a part of the sudo and syslog groups
+    sudo chown root:syslog /var/log
+    sudo chmod ug+rwx /var/log
+    sudo vi /etc/group
+        -- modify:
+            sudo:x:27:ubuntu
+            syslog:x:104:ubuntu
+
     -- start off the manager daemon
     sudo supervisorctl
         supervisor> reread

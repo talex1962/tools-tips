@@ -24,6 +24,11 @@ NOTE: the sudo password is 'friday'
     sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
     sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
 
+    -- copy the various volume manager helper functions
+    sudo cp /home/ld-admin/src/ld/littledev/devices/disk/funcs/*.py /usr/local/bin
+    sudo chown root:root /usr/local/bin/*
+    sudo chmod 0550 /usr/local/bin/*
+
     -- edit LDConfig.ini in /usr/local/etc and adapt to the specific site
     sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
     sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
@@ -38,7 +43,7 @@ NOTE: the sudo password is 'friday'
         consoleLogLevel = WARNING
 
         [COMMSMGR]
-        GUID = 0123456789
+        GUID = 9876543210
         deviceName = Marthas Cakes
 
         [DEVICE0]
@@ -62,7 +67,7 @@ NOTE: the sudo password is 'friday'
     sudo supervisorctl
         supervisor> reread
         supervisor> update
-        supervisor> restart
+        supervisor> restart all
         supervisor> status
             -- this should show RUNNING for all three daemons
             -- note process IDs, now wait for 5 seconds

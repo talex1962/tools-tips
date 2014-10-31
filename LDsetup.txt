@@ -400,7 +400,7 @@ ssh-rsa                                                                         
 
 11. Install the LD source tree
 
-    mkdir ~/src
+    mkdir -p ~/src
     cd ~/src
     git clone https://talex1962@github.com/talex1962/ld.git
     cd ld
@@ -593,6 +593,14 @@ ssh-rsa                                                                         
     cd /usr/local/lib/ld/littledev/db
     sudo python makeLDDB.py
     sudo chown -R ld-admin:ld-admin /var/lib/ld
+
+    -- set permissions on /var/log and make ld-admin a part of the sudo and syslog groups
+    sudo chown root:syslog /var/log
+    sudo chmod ug+rwx /var/log
+    sudo vi /etc/group
+        -- modify:
+            sudo:x:27:ld-admin
+            syslog:x:104:ld-admin
 
     -- now start off the various manager daemons
     sudo supervisorctl
