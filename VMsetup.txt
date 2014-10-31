@@ -188,12 +188,15 @@ SETTING UP A VM FOR A BACKEND
         name = Marthas Cakes
 
         [DEVICE0]
+        type = switch
         IPAddr = 192.168.1.64
 
         [DEVICE1]
-        IPAddr = 192.168.1.65
+        type = AP
+        IPAddr = 192.168.1.63
 
         [DEVICE2]
+        type = disk
         size = 20.0
 
     -- create the logDB database
@@ -202,7 +205,7 @@ SETTING UP A VM FOR A BACKEND
     sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/logDB.json /var/lib/ld/db
 
     -- generate main sqlite3 DB, then set permissions and ownership
-    cd /usr/local/lib/ld/mgmtserver/db
+    cd /usr/local/lib/ld/mgmtserver/server/db
     sudo python makeMainDB.py
     sudo chown -R ubuntu:ubuntu /var/lib/ld
 

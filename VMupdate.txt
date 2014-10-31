@@ -13,7 +13,7 @@ UPDATING A BACKEND VM
 
 2. Update LD source tree (all VMs)
 
-    cd /home/ubuntu/src
+    cd /home/ubuntu/src/ld
     git pull origin
         -- Git password is 'friday44'
 
@@ -56,6 +56,7 @@ UPDATING A BACKEND VM
     sudo supervisorctl
         supervisor> reread
         supervisor> update
+        supervisor> start all
         supervisor> status
         supervisor> exit
 
@@ -93,12 +94,15 @@ UPDATING A BACKEND VM
         name = Marthas Cakes
 
         [DEVICE0]
+        type = switch
         IPAddr = 192.168.1.64
 
         [DEVICE1]
-        IPAddr = 192.168.1.65
+        type = AP
+        IPAddr = 192.168.1.63
 
         [DEVICE2]
+        type = disk
         size = 20.0
 
     -- recreate the logDB database
@@ -107,7 +111,7 @@ UPDATING A BACKEND VM
     sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/logDB.json /var/lib/ld/db
 
     -- regenerate sqlite3 DB
-    cd /usr/local/lib/ld/mgmtserver/db
+    cd /usr/local/lib/ld/mgmtserver/server/db
     python makeMainDB.py
     sudo chown -R ubuntu:ubuntu /var/lib/ld
 
@@ -115,6 +119,7 @@ UPDATING A BACKEND VM
     sudo supervisorctl
         supervisor> reread
         supervisor> update
+        supervisor> start all
         supervisor> status
         supervisor> exit
 
@@ -156,5 +161,6 @@ UPDATING A BACKEND VM
     sudo supervisorctl
         supervisor> reread
         supervisor> update
+        supervisor> start all
         supervisor> status
         supervisor> exit
