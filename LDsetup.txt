@@ -18,7 +18,7 @@ SETTING UP A NEW LITTLE DEVICE
 
 2. SSH and keys
 
-    mkdir ~/.ssh
+    mkdir -p ~/.ssh
     cd ~/.ssh
     vi authorized_keys
     Add PuTTY public key:
@@ -352,7 +352,7 @@ ssh-rsa                                                                         
     sudo service nmbd start
 
     Verify that Samba still works and exports a 5G testshare filesystem.
-        smbclient -L localhost
+        sudo smbclient -L localhost
     Reboot and verify that it continues to work.
 
 9. Python stuff
@@ -497,11 +497,11 @@ ssh-rsa                                                                         
     sudo service nmbd stop
     sudo service nmbd start
 
-    smbclient -L localhost
+    sudo smbclient -L localhost
 
 13. Install supervisord and get it set up
 
-    sudo apt-get install supervisor
+    sudo apt-get -y install supervisor
 
     sudo vi /etc/supervisor/conf.d/commsMgr.conf
         -- modify:
@@ -606,6 +606,7 @@ ssh-rsa                                                                         
     sudo supervisorctl
         supervisor> reread
         supervisor> update
+        supervisor> start all
         supervisor> status
         supervisor> exit
 
