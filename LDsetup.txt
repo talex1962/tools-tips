@@ -31,12 +31,13 @@ ssh-rsa                                                                         
     cd ..
     chmod go-rwx .ssh
 
-3. Speed up boot time and various other stuff
+3. Speed up boot time, remove stuff
 
     sudo vi /etc/init/failsafe.conf
-    -- reduce all sleep times
+        -- reduce all sleep times
     sudo vi /etc/group
-    -- add ld-admin to lots of groups
+        -- add ld-admin to lots of groups
+    sudo apt-get remove light-locker xscreensaver gnome-screensaver xlock slock
 
 4. Networking
 
