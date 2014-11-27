@@ -55,3 +55,50 @@ Installing the VPN Server
     sudo cp /usr/local/lib/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
     sudo chown root:root /usr/local/bin/*
     sudo chmod 0550 /usr/local/bin/*
+
+7. Set up the Python source and start the daemons
+
+    -- stop the daemon
+    sudo supervisorctl
+        supervisor> stop all
+        supervisor> status
+        supervisor> exit
+
+    -- copy over the various mgmtserver files to their various locations
+    sudo mkdir -p /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
+    sudo cp -r /home/ubuntu/src/ld/libs /usr/local/lib/ld
+    sudo cp -r /home/ubuntu/src/ld/mgmtserver /usr/local/lib/ld
+
+    -- edit the master configuration file to match site needs:
+    -- ENSURE THAT THE PREVIOUS EDITS FROM VMSETUP.TXT ARE APPLIED!
+    sudo vi /usr/local/etc/mgmtConfig.ini
+        -- modify as follows (leave rest unchanged):
+        [MGMTSERVER]
+        VPNPassword = Friday2014
+        VPNServerURL = 54.201.71.184:443
+
+    -- recreate the logDB database
+    cd /home/ubuntu/src/ld/mgmtserver/server/db
+    python devLog.py
+    sudo cp /home/ubuntu/src/ld/mgmtserver/server/db/logDB.json /var/lib/ld/db
+
+    -- regenerate main sqlite3 DB, then set permissions and ownership
+    cd /usr/local/lib/ld/mgmtserver/server/db
+    sudo python makeMainDB.py
+    sudo chown -R ubuntu:ubuntu /var/lib/ld
+
+    -- set permissions on /var/log and make ubuntu a part of the sudo and syslog groups
+    sudo chown root:syslog /var/log
+    sudo chmod ug+rwx /var/log
+    sudo vi /etc/group
+        -- modify:
+            sudo:x:27:ubuntu
+            syslog:x:104:ubuntu
+
+    -- start off the manager daemon
+    sudo supervisorctl
+        supervisor> reread
+        supervisor> update
+        supervisor> status
+        supervisor> exit

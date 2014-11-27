@@ -62,3 +62,60 @@ Installing the VPN Bridge Server On The Little Device
     sudo cp /usr/local/lib/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
     sudo chown root:root /usr/local/bin/*
     sudo chmod 0550 /usr/local/bin/*
+
+6. Add VPN manager to supervisord
+
+    sudo vi /etc/supervisor/conf.d/VPNMgr.conf
+        -- modify:
+        [program:VPNManager]
+        command=python -u VPNManager.py
+        process_name=VPNManager
+        directory=/usr/local/lib/ld/littledev
+        stdout_logfile=/tmp/ram/VPNConsole.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=500KB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ld-admin
+
+7. Set up the VPN manager Python and start the daemons
+
+    -- copy over the various files to their various locations
+    sudo mkdir -p /usr/local/lib/ld
+    sudo mkdir -p /var/lib/ld/db
+    sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
+    sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
+
+    -- edit LDConfig.ini in /usr/local/etc and adapt to the specific site
+    sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
+    sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
+
+    sudo vi /usr/local/etc/LDConfig.ini
+        -- modify:
+        -- NOTE: ENSURE THAT EXISTING ENTRIES ARE AS PER LDsetup.txt!
+        [VPNMGR]
+        password = Friday2014
+
+    -- create the JSON device databases
+    cd /usr/local/lib/ld/littledev/db
+    sudo python makeLDDB.py
+    sudo chown -R ld-admin:ld-admin /var/lib/ld
+
+    -- set permissions on /var/log and make ld-admin a part of the sudo and syslog groups
+    sudo chown root:syslog /var/log
+    sudo chmod ug+rwx /var/log
+    sudo vi /etc/group
+        -- modify:
+            sudo:x:27:ld-admin
+            syslog:x:104:ld-admin
+
+    -- now start off the various manager daemons
+    sudo supervisorctl
+        supervisor> reread
+        supervisor> update
+        supervisor> start all
+        supervisor> status
+        supervisor> exit
+
