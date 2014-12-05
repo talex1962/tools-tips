@@ -115,7 +115,7 @@ Demo Setup #2:
 -------------
 
 HW:
-    Management server: ec2-54-68-105-194.us-west-2.compute.amazonaws.com (54.68.105.19)
+    Management server: ec2-54-68-105-194.us-west-2.compute.amazonaws.com (54.68.105.194)
     vCIO GUI server: ec2-54-68-66-127.us-west-2.compute.amazonaws.com (54.68.66.127)
 
     LittleDevice4: ld-admin/friday, DHCP address

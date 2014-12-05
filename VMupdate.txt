@@ -5,11 +5,12 @@ UPDATING A BACKEND VM
 
     NOTE: the following are already installed:
 
-    xtitle vim exuberant-ctags git tcpdump python-pip unzip python-dev python-docutils git
+    via apt: xtitle vim exuberant-ctags git tcpdump python-pip unzip python-dev python-docutils
     supervisor python-imaging python-pythonmagick python-markdown python-textile python-django
     apache2 apache2-data apache2-mpm-prefork apache2-utils libapache2-mod-wsgi
-    libmysqlclient-dev libexpat1 ssl-cert django MySQL-python httplib2 sqlite3 sqlite3-doc
-    SQLAlchemy web.py
+    libmysqlclient-dev libexpat1 ssl-cert sqlite3 sqlite3-doc
+    
+    via pip: django MySQL-python httplib2 SQLAlchemy web.py pyparsing
 
 2. Update LD source tree (all VMs)
 
@@ -68,6 +69,10 @@ UPDATING A BACKEND VM
         supervisor> status
         supervisor> exit
 
+    -- verify SoftEther VPN server is working OK
+    sudo /usr/local/vpnserver/vpncmd /TOOLS /CMD check
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD ServerStatusGet
+
     -- copy over the various mgmtserver files to their various locations
     sudo mkdir -p /usr/local/lib/ld
     sudo mkdir -p /var/lib/ld/db
@@ -76,7 +81,6 @@ UPDATING A BACKEND VM
 
     -- copy over the master configuration file and edit to match site needs:
     sudo rm -f /usr/local/lib/ld/mgmtserver/server/mgmtConfig.ini
-    sudo cp /home/ubuntu/src/ld/mgmtserver/server/mgmtConfig.ini /usr/local/etc
 
     sudo vi /usr/local/etc/mgmtConfig.ini
         -- modify as follows (leave rest unchanged):
@@ -88,6 +92,10 @@ UPDATING A BACKEND VM
         fileLogLevel = INFO
         consoleLogLevel = WARNING
         defaultSites = yes
+
+        [MGMTSERVER]
+        VPNPassword = Friday2014
+        VPNServerURL = 54.68.105.194:443
 
         [SITE0]
         GUID = 9876543210
@@ -104,6 +112,9 @@ UPDATING A BACKEND VM
         [DEVICE2]
         type = disk
         size = 20.0
+    NOTE: if /usr/local/etc/mgmtConfig.ini does not exist, then do:
+        sudo cp /home/ubuntu/src/ld/mgmtserver/server/mgmtConfig.ini /usr/local/etc
+    and proceed with editing as usual.
 
     -- recreate the logDB database
     cd /home/ubuntu/src/ld/mgmtserver/server/db
@@ -114,6 +125,16 @@ UPDATING A BACKEND VM
     cd /usr/local/lib/ld/mgmtserver/server/db
     python makeMainDB.py
     sudo chown -R ubuntu:ubuntu /var/lib/ld
+
+    -- reconfigure VPN server
+    cd /usr/local/lib/ld/libs/vpn/funcs
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /IN:serversetup.bat
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD HubList
+
+    -- copy VPN manager helper functions
+    sudo cp /usr/local/lib/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
+    sudo chown root:root /usr/local/bin/*
+    sudo chmod 0550 /usr/local/bin/*
 
     -- restart the manager daemon
     sudo supervisorctl

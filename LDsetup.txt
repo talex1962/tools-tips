@@ -39,7 +39,45 @@ ssh-rsa                                                                         
         -- add ld-admin to lots of groups
     sudo apt-get remove light-locker xscreensaver gnome-screensaver xlock slock
 
-4. Networking
+4. ld-admin home directory
+
+    Edit .bashrc:
+
+        -- comment out PS1= stuff (2 places)
+        -- add 'xtitle $HOSTNAME'
+        -- add aliases:
+            alias rm='rm -i'
+            alias gitshow='git show --pretty="format:" --name-only $1'
+            alias update='sudo apt-get -y update && sudo apt-get -y upgrade'
+            alias title=xtitle
+        -- set the cdpath
+            CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/littledev"
+
+    Edit .vimrc:
+
+        set tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+        set wrapscan wrapmargin=0 wrap linebreak textwidth=0 columns=96
+        set backspace=indent,eol,start
+        set autoindent nosmartindent cindent
+        set ignorecase smartcase
+        set hlsearch
+        set noedcompatible nocompatible nocscopetag
+        set exrc
+        set tags=./tags,../tags,../../tags,../../../tags,~/tags
+        set title
+
+        inoremap # X^H#
+        nnoremap ^] g^]
+
+        syn on
+        filetype plugin on
+        filetype indent on
+
+        let &titlestring = hostname() . ": " . expand("%m%t")
+        auto BufEnter * :let &titlestring = hostname() . ": " . expand("%m%t")
+        auto VimLeave * :set t_ts="LittleDevice4"
+
+5. Networking
 
     sudo apt-get install -y vlan isc-dhcp-server ntp bind9 dnsutils
     sudo modprobe 8021q
@@ -104,7 +142,7 @@ ssh-rsa                                                                         
     -- remove NetworkManager
     sudo apt-get purge -y network-manager
 
-5. Set up DHCP and DNS services
+6. Set up DHCP and DNS services
 
     sudo vi /etc/dhcp/dhcpd.conf
         -- modify
@@ -152,7 +190,7 @@ ssh-rsa                                                                         
 
     sudo service bind9 restart
 
-6. Set up routing
+7. Set up routing
 
     sudo vi /etc/sysctl.conf
         -- modify:
@@ -168,7 +206,7 @@ ssh-rsa                                                                         
 
     NOTE! NOTE! pinging an external host will not work unless NAT is running!
 
-7. Set up iptables for NAT
+8. Set up iptables for NAT
 
     BASIC SETUP (clean up later for firewalls) to let internal stuff out:
 
@@ -192,7 +230,7 @@ ssh-rsa                                                                         
         -A POSTROUTING -o eth0 -j MASQUERADE
         COMMIT
 
-8. File system and service
+9. File system and service
 
     sudo apt-get install -y lvm2 liblvm2-dev samba cryptsetup-bin cryptsetup
 
@@ -356,50 +394,34 @@ ssh-rsa                                                                         
         sudo smbclient -L localhost
     Reboot and verify that it continues to work.
 
-9. Python stuff
+10. VPN bridge server software
+
+    -- Download 32-bit Linux vpnserver:
+
+        cd /tmp
+        wget http://www.softether-download.com/files/softether/v4.11-9506-beta-2014.10.22-tree/Linux/SoftEther_VPN_Server/32bit_-_Intel_x86/softether-vpnserver-v4.11-9506-beta-2014.10.22-linux-x86-32bit.tar.gz
+
+    -- Set up build environment, create bridge, verify that it built OK
+
+        sudo apt-get install -y build-essential
+        sudo tar zxvf softether-vpnserver-v4.11-9506-beta-2014.10.22-linux-x86-32bit.tar.gz -C /usr/local
+        cd /usr/local/vpnserver
+        sudo make
+            -- type '1' to indicate reading the License Agreement, '1' to indicate agreement,
+                '1' to continue
+        sudo chmod -R 600 *
+        sudo chmod 700 vpnserver vpncmd
+        cd ..
+        sudo chmod 700 vpnserver
+        sudo /usr/local/vpnserver/vpncmd /TOOLS /CMD check
+
+11. Python stuff
 
     sudo apt-get -y install python-pip unzip python-dev python-docutils
     sudo pip install httplib2
+    sudo pip install pyparsing
 
-10. ld-admin home directory
-
-    Edit .bashrc:
-
-        -- comment out PS1= stuff (2 places)
-        -- add 'xtitle $HOSTNAME'
-        -- add aliases:
-            alias rm='rm -i'
-            alias gitshow='git show --pretty="format:" --name-only $1'
-            alias update='sudo apt-get -y update && sudo apt-get -y upgrade'
-            alias title=xtitle
-        -- set the cdpath
-            CDPATH=".:..:~:~/src:~/src/ld:~/src/ld/littledev"
-
-    Edit .vimrc:
-
-        set tabstop=4 shiftwidth=4 softtabstop=4 expandtab
-        set wrapscan wrapmargin=0 wrap linebreak textwidth=0 columns=96
-        set backspace=indent,eol,start
-        set autoindent nosmartindent cindent
-        set ignorecase smartcase
-        set hlsearch
-        set noedcompatible nocompatible nocscopetag
-        set exrc
-        set tags=./tags,../tags,../../tags,../../../tags,~/tags
-        set title
-
-        inoremap # X^H#
-        nnoremap ^] g^]
-
-        syn on
-        filetype plugin on
-        filetype indent on
-
-        let &titlestring = hostname() . ": " . expand("%m%t")
-        auto BufEnter * :let &titlestring = hostname() . ": " . expand("%m%t")
-        auto VimLeave * :set t_ts="LittleDevice4"
-
-11. Install the LD source tree
+12. Install the LD source tree
 
     mkdir -p ~/src
     cd ~/src
@@ -411,7 +433,7 @@ ssh-rsa                                                                         
     cd littledev
     mkdir logs
 
-12. Volume manager functions
+13. Volume and VPN manager functions
 
     -- set up sudoers file
     sudo vi /etc/sudoers
@@ -421,13 +443,15 @@ ssh-rsa                                                                         
         Cmnd_Alias LVFUNCS_CMDS = /usr/local/bin/ld_lvfuncs.py
         Cmnd_Alias FSFUNCS_CMDS = /usr/local/bin/ld_fsfuncs.py
         Cmnd_Alias SMBFUNCS_CMDS = /usr/local/bin/ld_smbfuncs.py
-        Cmnd_Alias LDFUNCS = LVFUNCS_CMDS,FSFUNCS_CMDS,SMBFUNCS_CMDS
+        Cmnd_Alias VPNFUNCS_CMDS = /usr/local/bin/ld_vpnfuncs.py
+        Cmnd_Alias LDFUNCS = LVFUNCS_CMDS,FSFUNCS_CMDS,SMBFUNCS_CMDS,VPNFUNCS_CMDS
 
         # Allow the Little Devices admin user to run specific commands
         LDUSER ALL=(ALL) NOPASSWD: LDFUNCS
 
-    -- copy the various volume manager helper functions
-    sudo cp ~/src/ld/littledev/devices/disk/funcs/*.py /usr/local/bin
+    -- copy the various helper functions for the volume and VPN managers
+    sudo cp /home/ld-admin/src/ld/littledev/devices/disk/funcs/*.py /usr/local/bin
+    sudo cp /home/ld-admin/src/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
     sudo chown root:root /usr/local/bin/*
     sudo chmod 0550 /usr/local/bin/*
 
@@ -449,7 +473,6 @@ ssh-rsa                                                                         
         #
         # The following comment MUST be present for the FS funcs to process this file
         # DYNAMIC VOLUMES
-        /dev/mapper/storage-testshare /srv/storage/testshare ext4 defaults,nobootwait 0 2
 
     sudo mount -a
     sudo chmod a+rwx /tmp/ram
@@ -482,16 +505,6 @@ ssh-rsa                                                                         
             #
             # The following comment MUST be present for the Samba funcs to process this file
             # DYNAMIC SHARES
-            [testshare]
-                comment = Test Volume
-                path = /srv/storage/testshare
-                browsable = yes
-                guest ok = yes
-                read only = no
-                writable = yes
-                create mask = 0755
-                directory mask = 0777
-            # ENDSHARE
 
     sudo service smbd stop
     sudo service smbd start
@@ -500,7 +513,7 @@ ssh-rsa                                                                         
 
     sudo smbclient -L localhost
 
-13. Install supervisord and get it set up
+14. Install supervisord and get it set up
 
     sudo apt-get -y install supervisor
 
@@ -549,17 +562,46 @@ ssh-rsa                                                                         
         startretries=1000
         user=ld-admin
 
+    sudo vi /etc/supervisor/conf.d/VPNMgr.conf
+        -- modify:
+        [program:VPNManager]
+        command=python -u VPNManager.py
+        process_name=VPNManager
+        directory=/usr/local/lib/ld/littledev
+        stdout_logfile=/tmp/ram/VPNConsole.log
+        stdout_logfile_backups=1
+        stdout_logfile_maxbytes=500KB
+        redirect_stderr=true
+        autostart=true
+        autorestart=true
+        startretries=1000
+        user=ld-admin
+
     NOTE: don't start the daemons yet.
 
-14. Move the Python functions to /usr/local and start them with supervisor;
+15. Move the Python functions to /usr/local and start them with supervisor;
     also ensure that the JSON DB files exist and are placed in /var/lib/ld/db
     NOTE: this needs /tmp/ram to exist and hold a RAMdisk
 
-    -- copy over the various files to their various locations
+    -- copy over the various LD Python files to their various locations
     sudo mkdir -p /usr/local/lib/ld
     sudo mkdir -p /var/lib/ld/db
     sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
     sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
+
+    --- set up the VPN bridge server to be started by init, and check it
+    sudo cp /usr/local/lib/ld/libs/vpn/funcs/vpnserver /etc/init.d
+    sudo chmod 755 /etc/init.d/vpnserver
+    sudo update-rc.d vpnserver defaults
+    sudo /etc/init.d/vpnserver start
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /CMD ServerPasswordSet Friday2014
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /TOOLS /CMD check
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD ServerStatusGet
+        NOTE: to remove the VPN server:
+            sudo /etc/init.d/vpnserver stop
+            sudo update-rc.d -f vpnserver remove
+            sudo rm /etc/init.d/vpnserver
+            sudo rm -rf /usr/local/vpnserver
 
     -- edit LDConfig.ini in /usr/local/etc and adapt to the specific site
     sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
@@ -577,6 +619,9 @@ ssh-rsa                                                                         
         [COMMSMGR]
         GUID = 9876543210
         deviceName = Marthas Cakes
+
+        [VPNMGR]
+        password = Friday2014
 
         [DEVICE0]
         type = AP
@@ -603,6 +648,11 @@ ssh-rsa                                                                         
             sudo:x:27:ld-admin
             syslog:x:104:ld-admin
 
+    -- configure the VPN bridge server to act as a cascading bridge
+    cd /usr/local/lib/ld/libs/vpn/funcs
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /IN:bridgesetup.bat
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD HubList
+
     -- now start off the various manager daemons
     sudo supervisorctl
         supervisor> reread
@@ -611,12 +661,12 @@ ssh-rsa                                                                         
         supervisor> status
         supervisor> exit
 
-15. Final cleanup
+16. Final cleanup
 
     sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
     sudo reboot
 
-16. Log in and verify that the daemons are running
+17. Log in and verify that the daemons are running
 
     NOTE: to stop the daemons:
         sudo supervisorctl

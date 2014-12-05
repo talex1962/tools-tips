@@ -24,16 +24,16 @@ NOTE: the sudo password is 'friday'
     sudo cp -r /home/ld-admin/src/ld/libs /usr/local/lib/ld
     sudo cp -r /home/ld-admin/src/ld/littledev /usr/local/lib/ld
 
-    -- copy the various volume manager helper functions
+    -- copy the various volume and VPN manager helper functions
     sudo cp /home/ld-admin/src/ld/littledev/devices/disk/funcs/*.py /usr/local/bin
+    sudo cp /home/ld-admin/src/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
     sudo chown root:root /usr/local/bin/*
     sudo chmod 0550 /usr/local/bin/*
 
     -- edit LDConfig.ini in /usr/local/etc and adapt to the specific site
     sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
-    sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
     sudo vi /usr/local/etc/LDConfig.ini
-        -- modify the items in the various sections as below (LEAVE OTHERS ALONE!):
+        -- ensure the items in the various sections are as below (LEAVE OTHERS ALONE!):
         [DEFAULT]
         DBPath = /var/lib/ld/db
         logPath = /var/log
@@ -45,6 +45,9 @@ NOTE: the sudo password is 'friday'
         [COMMSMGR]
         GUID = 9876543210
         deviceName = Marthas Cakes
+
+        [VPNMGR]
+        password = Friday2014
 
         [DEVICE0]
         type = AP
@@ -58,6 +61,10 @@ NOTE: the sudo password is 'friday'
         type = disk
         size = 20.0
 
+    NOTE: if there is no file called /usr/local/etc/LDConfig.ini, do the following first:
+        sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
+    Now edit the config file /usr/local/etc/LDConfig.ini and make the changes above
+
     -- create the JSON device databases
     cd /usr/local/lib/ld/littledev/db
     sudo python makeLDDB.py
@@ -69,10 +76,10 @@ NOTE: the sudo password is 'friday'
         supervisor> update
         supervisor> restart all
         supervisor> status
-            -- this should show RUNNING for all three daemons
+            -- this should show RUNNING for all four daemons
             -- note process IDs, now wait for 5 seconds
         supervisor> status
-            -- this should still show RUNNING for all three daemons
+            -- this should still show RUNNING for all four daemons
             -- the process IDs should be the same as before
         supervisor> exit
 
@@ -83,15 +90,16 @@ NOTE: the sudo password is 'friday'
 4. Log in again as ld-admin and verify that the daemons are running
 
     ps aux | grep python
-        -- should see lines with 'commsManager', 'diskManager', 'LANManager'
+        -- should see lines with 'commsManager', 'diskManager', 'LANManager',
+            'VPNManager'
 
     NOTE: to stop and/or restart the daemons:
         sudo supervisorctl
-            supervisor> stop <daemon: commsManager, LANManager, diskManager>
+            supervisor> stop <daemon: commsManager, LANManager, diskManager, VPNManager>
                 - or -
             supervisor> stop all
 
-            supervisor> restart <daemon: commsManager, LANManager, diskManager>
+            supervisor> restart <daemon: commsManager, LANManager, diskManager, VPNManager>
                 - or -
             supervisor> restart all
 
