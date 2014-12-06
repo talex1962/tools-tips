@@ -162,6 +162,8 @@ UPDATING A BACKEND VM
         supervisor> stop all
         supervisor> status
         supervisor> exit
+    ps aux | grep python
+    kill -9 <PID of Django process>
 
     -- update Django environment
     cd /home/ubuntu/src/ld/vcioserver/site

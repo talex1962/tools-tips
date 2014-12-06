@@ -20,43 +20,7 @@ Installing VPN Service On Previously Configured Management Server
     sudo chmod 700 vpnserver
     sudo /usr/local/vpnserver/vpncmd /TOOLS /CMD check
 
-3. Update init to autostart daemon, start the daemon, set the password, verify all is OK
-
-    NOTE: assumes that the LD VM install process was completed and the source (libs and
-        mgmtserver) was copied to /usr/local/lib/ld
-
-    sudo cp /usr/local/lib/ld/libs/vpn/funcs/vpnserver /etc/init.d
-    sudo chmod 755 /etc/init.d/vpnserver
-    sudo update-rc.d vpnserver defaults
-    sudo /etc/init.d/vpnserver start
-    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /CMD ServerPasswordSet Friday2014
-    sudo /usr/local/vpnserver/vpncmd localhost:443 /TOOLS /CMD check
-    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD ServerStatusGet
-
-4. Configure the VPN server
-
-    cd /usr/local/lib/ld/libs/vpn/funcs
-    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /IN:serversetup.bat
-    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD HubList
-
-    NOTE: to remove the VPN server:
-        sudo /etc/init.d/vpnserver stop
-        sudo update-rc.d -f vpnserver remove
-        sudo rm /etc/init.d/vpnserver
-        sudo rm -rf /usr/local/vpnserver
-
-5. Set up parser functions and VPN funcs support
-
-    -- install pyparsing and set up a temp directory
-    sudo pip install pyparsing
-    sudo mkdir -p /tmp/ram && sudo chmod a+rwx /tmp/ram
-
-    -- copy the VPN manager helper functions
-    sudo cp /usr/local/lib/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
-    sudo chown root:root /usr/local/bin/*
-    sudo chmod 0550 /usr/local/bin/*
-
-7. Set up the Python source and start the daemons
+3. Stop the server and set up the Python source
 
     -- stop the daemon
     sudo supervisorctl
@@ -69,6 +33,45 @@ Installing VPN Service On Previously Configured Management Server
     sudo mkdir -p /var/lib/ld/db
     sudo cp -r /home/ubuntu/src/ld/libs /usr/local/lib/ld
     sudo cp -r /home/ubuntu/src/ld/mgmtserver /usr/local/lib/ld
+    sudo rm -f /usr/local/lib/ld/mgmtserver/server/mgmtConfig.ini
+
+4. Update init to autostart daemon, start the daemon, set the password, verify all is OK
+
+    NOTE: assumes that the LD VM install process was completed and the source (libs and
+        mgmtserver) was copied to /usr/local/lib/ld
+
+    sudo cp /usr/local/lib/ld/libs/vpn/funcs/vpnserver /etc/init.d
+    sudo chmod 755 /etc/init.d/vpnserver
+    sudo update-rc.d vpnserver defaults
+    sudo /etc/init.d/vpnserver start
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /CMD ServerPasswordSet Friday2014
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /TOOLS /CMD check
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD ServerStatusGet
+
+5. Configure the VPN server
+
+    cd /usr/local/lib/ld/libs/vpn/funcs
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /IN:serversetup.bat
+    sudo /usr/local/vpnserver/vpncmd localhost:443 /SERVER /PASSWORD:Friday2014 /CMD HubList
+
+    NOTE: to remove the VPN server:
+        sudo /etc/init.d/vpnserver stop
+        sudo update-rc.d -f vpnserver remove
+        sudo rm /etc/init.d/vpnserver
+        sudo rm -rf /usr/local/vpnserver
+
+6. Set up parser functions and VPN funcs support
+
+    -- install pyparsing and set up a temp directory
+    sudo pip install pyparsing
+    sudo mkdir -p /tmp/ram && sudo chmod a+rwx /tmp/ram
+
+    -- copy the VPN manager helper functions
+    sudo cp /usr/local/lib/ld/libs/vpn/funcs/ld_vpnfuncs.py /usr/local/bin
+    sudo chown root:root /usr/local/bin/*
+    sudo chmod 0550 /usr/local/bin/*
+
+7. Configure the system and generate DBs
 
     -- edit the master configuration file to match site needs:
     -- ENSURE THAT THE PREVIOUS EDITS FROM VMSETUP.TXT ARE APPLIED!
@@ -93,6 +96,8 @@ Installing VPN Service On Previously Configured Management Server
     sudo python makeMainDB.py
     sudo chown -R ubuntu:ubuntu /var/lib/ld
 
+8. Enable logging and start the manager daemon
+
     -- set permissions on /var/log and make ubuntu a part of the sudo and syslog groups
     sudo chown root:syslog /var/log
     sudo chmod ug+rwx /var/log
@@ -105,5 +110,6 @@ Installing VPN Service On Previously Configured Management Server
     sudo supervisorctl
         supervisor> reread
         supervisor> update
+        supervisor> restart all
         supervisor> status
         supervisor> exit

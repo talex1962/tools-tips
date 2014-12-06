@@ -56,10 +56,15 @@ is also 'friday'
     sudo rm -f /usr/local/lib/ld/littledev/LDConfig.ini
     sudo cp /home/ld-admin/src/ld/littledev/LDConfig.ini /usr/local/etc
     sudo vi /usr/local/etc/LDConfig.ini
-        -- modify the items in the various sections as below (LEAVE OTHERS ALONE!):
+        -- add/modify the items in the various sections as below (LEAVE OTHERS ALONE!):
         [DEFAULT]
         DBPath = /var/lib/ld/db
         logPath = /var/log
+
+        [DB]
+        # the VPNLink config and status database files
+        VPNLinkConfigDBFile = %(DBPath)s/VPNLinkConfigDB.json
+        VPNLinkStatusDBFile = %(DBPath)s/VPNLinkStatusDB.json
 
         [MAIN]
         fileLogLevel = INFO
