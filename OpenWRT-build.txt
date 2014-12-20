@@ -1,0 +1,92 @@
+Building OpenWRT
+----------------
+
+1. Prepare machine
+
+    -- Load Xubuntu 14.04 64-bit
+    -- set up files in /etc
+    -- mount diskserver/misc on /mnt/misc
+
+    -- get basic stuff and remove unnecessary stuff
+    sudo apt-get install -y openssh-server xtitle vim exuberant-ctags git tcpdump dkms screen
+    sudo apt-get purge light-locker xscreensaver gnome-screensaver xlock slock
+    sudo apt-get purge gstreamer1.0-pulseaudio network-manager catfish screenshot ispell
+
+    -- set up .ssh/authorized_keys, .bashrc and .vimrc as per standard procedures
+
+    NOTE: for Gparted usage, set up xrdp for remote desktop:
+    sudo apt-get install -y xrdp
+    sudo /etc/init/d/xrdp start
+
+    Now use remote desktop to access the machine. A new screen will be created. Log
+    in with standard user credentials.
+
+2. Install prerequisites (assumes Xubuntu 14.04)
+
+    sudo apt-get install -y asciidoc binutils fastjar bzip2 flex gcc util-linux gawk
+    sudo apt-get install -y intltool genisoimage patch rsync ruby sdcc
+    sudo apt-get install -y libboost1.55-tools-dev libxml-parser-perl libusb-dev
+    sudo apt-get install -y bin86 bcc sharutils openjdk-7-jdk
+    sudo apt-get install -y build-essential subversion git-core libncurses5-dev zlib1g-dev
+    sudo apt-get install -y quilt libssl-dev xsltproc libboost1.55-tools-dev
+    sudo apt-get install -y make mercurial bzr ecj cvs unzip
+    sudo apt-get install -y python-pip python-dev python-docutils
+
+    sudo apt-get -y update && sudo apt-get -y upgrade
+
+3. Set up directories and download/untar sources
+
+    -- set up separate toolchain, SDK, imagebuilder from diskserver (optional)
+    mkdir -p ~/src/openwrt/tools
+    cd ~/src/openwrt/tools
+
+    tar xvf /mnt/misc/littledevs/openwrt/openwrt_trunk/OpenWrt-Toolchain-octeon-for-mips64_octeon_64-gcc-4.6-linaro_uClibc-0.9.33.2.tar
+    mv OpenWrt-Toolchain-octeon-for-mips64_octeon_64-gcc-4.6-linaro_uClibc-0.9.33.2 Toolchain
+
+    tar xvf /mnt/misc/littledevs/openwrt/openwrt_trunk/OpenWrt-ImageBuilder-octeon-for-linux-x86_64.tar
+    mv OpenWrt-ImageBuilder-octeon-for-linux-x86_64 ImageBuilder
+
+    tar xvf /mnt/misc/littledevs/openwrt/openwrt_trunk/OpenWrt-SDK-octeon-for-linux-x86_64-gcc-4.6-linaro_uClibc-0.9.33.2.tar
+    mv OpenWrt-SDK-octeon-for-linux-x86_64-gcc-4.6-linaro_uClibc-0.9.33.2 SDK
+
+    -- get the OpenWRT source and included toolchain (about 3-4 hours to download)
+    mkdir -p ~/src/openwrt
+    cd ~/src/openwrt
+    git clone git://git.openwrt.org/openwrt.git
+
+4. Configure OpenWRT and build it
+
+    -- configure OpenWRT and packages
+    cd ~/src/openwrt/openwrt
+    vi feeds.conf.default
+    ./scripts/feeds update -a
+    ./scripts/feeds install -a
+    make package/symlinks
+        -- NOTE: this pulls down ALL packages, use with care
+    make defconfig
+    make prereq
+    make menuconfig
+        NOTE: select the packages to be downloaded and built here
+
+    -- fix up Perl build if Perl is included in packages
+    cd ~/src/openwrt/openwrt/feeds/packages/lang/perl/files
+    cp config.sh-mips.in config.sh-mips64.in
+    vi config.sh-mips64.in
+        -- change the following:
+            archname='mips64-linux-uclibc'
+            myarchname='mips64-linux-uclibc'
+            targetarch='mips64-linux-uclibc'
+
+    -- make the system (about 12 hours to build)
+    make defconfig
+    make
+
+    NOTE: for debugging make issues:
+        make V=s 2>&1 | tee /tmp/build.log
+
+5. Get binary and load it
+
+    -- untar kernel and root image, then follow instructions in OpenWRT-ERLite3.txt
+    cd ~/src/openwrt/openwrt/bin/octeon
+    tar xvf openwrt-octeon-erlite-sysupgrade.tar
+
