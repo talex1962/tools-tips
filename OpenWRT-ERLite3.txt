@@ -320,3 +320,164 @@ Built-in commands:
         local printf pwd read readonly return set shift source test times
         trap true type ulimit umask unalias unset wait
 
+=====================================================================================
+edit files in /etc/config/:
+
+/etc/config/network
+-------------------
+
+config interface 'loopback'
+        option ifname 'lo'
+        option proto 'static'
+        option ipaddr '127.0.0.1'
+        option netmask '255.0.0.0'
+
+config globals 'globals'
+        option ula_prefix 'fd1e:0eae:3564::/48'
+
+config interface 'wan'
+        option ifname 'eth0'
+        option force_link '1'
+        option proto 'static'
+        option ipaddr '192.168.0.75'
+        option gateway '192.168.0.1'
+        option broadcast '192.168.0.255'
+        option dns '8.8.8.8'
+        option netmask '255.255.255.0'
+
+config interface 'lan1'
+        option ifname 'eth1'
+        option proto 'static'
+        option ipaddr '192.168.1.1'
+        option gateway '192.168.1.1'
+        option broadcast '192.168.1.255'
+        option dns '8.8.8.8'
+        option netmask '255.255.255.0'
+
+config interface 'lan2'
+        option ifname 'eth2'
+        option proto 'static'
+        option ipaddr '192.168.2.1'
+        option gateway '192.168.2.1'
+        option broadcast '192.168.2.255'
+        option dns '8.8.8.8'
+        option netmask '255.255.255.0'
+
+/etc/config/dhcp
+----------------
+
+config dnsmasq
+        option domainneeded '1'
+        option boguspriv '1'
+        option filterwin2k '0'
+        option localise_queries '1'
+        option rebind_protection '1'
+        option rebind_localhost '1'
+        option local '/lan/'
+        option domain 'lan'
+        option expandhosts '1'
+        option nonegcache '0'
+        option authoritative '1'
+        option readethers '1'
+        option leasefile '/tmp/dhcp.leases'
+        option resolvfile '/tmp/resolv.conf.auto'
+
+config dhcp 'lan1'
+        option interface 'lan1'
+        option start '150'
+        option limit '100'
+        option leasetime '12h'
+        option dhcpv6 'server'
+        option ra 'server'
+
+config dhcp 'lan2'
+        option interface 'lan2'
+        option start '150'
+        option limit '100'
+        option leasetime '12h'
+        option dhcpv6 'server'
+        option ra 'server'
+
+config odhcpd 'odhcpd'
+        option maindhcp '0'
+        option leasefile '/tmp/hosts/odhcpd'
+        option leasetrigger '/usr/sbin/odhcpd-update'
+
+/etc/config/firewall
+--------------------
+
+config defaults
+        option syn_flood        1
+        option input            ACCEPT
+        option output           ACCEPT
+        option forward          REJECT
+        option disable_ipv6     1
+
+config zone
+        option name             wan
+        list   network          'wan'
+        option input            REJECT
+        option output           ACCEPT
+        option forward          REJECT
+        option masq             1
+        option conntrack        1
+        option mtu_fix          1
+
+config zone
+        option name             lan1
+        list   network          'lan1'
+        option input            ACCEPT
+        option output           ACCEPT
+        option forward          ACCEPT
+
+config zone
+        option name             lan2
+        list   network          'lan2'
+        option input            ACCEPT
+        option output           ACCEPT
+        option forward          ACCEPT
+
+config forwarding
+        option src              lan1
+        option dest             wan
+
+config forwarding
+        option src              lan2
+        option dest             wan
+
+config forwarding
+        option src              lan1
+        option dest             lan2
+
+config forwarding
+        option src              lan2
+        option dest             lan1
+
+# Allow IPv4 ping to WAN port
+config rule
+        option name             Allow-Ping
+        option src              wan
+        option proto            icmp
+        option icmp_type        echo-request
+        option family           ipv4
+        option target           ACCEPT
+
+# include a file with users custom iptables rules
+config include
+        option path /etc/firewall.user
+
+/etc/config/system
+------------------
+
+config system
+        option hostname OpenWrt-Router
+        option timezone PST8PDT,M3.2.0,M11.1.0
+
+config timeserver ntp
+        list server     0.openwrt.pool.ntp.org
+        list server     1.openwrt.pool.ntp.org
+        list server     2.openwrt.pool.ntp.org
+        list server     3.openwrt.pool.ntp.org
+        option enabled 1
+        option enable_server 0
+
