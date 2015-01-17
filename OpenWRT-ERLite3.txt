@@ -462,6 +462,15 @@ config rule
         option family           ipv4
         option target           ACCEPT
 
+# Allow SSH to WAN port (TEMPORARY!)
+config rule
+        option name             Allow-SSH
+        option src              wan
+        option proto            tcp
+        option dest_port        22
+        option family           ipv4
+        option target           ACCEPT
+
 # include a file with users custom iptables rules
 config include
         option path /etc/firewall.user
@@ -481,3 +490,55 @@ config timeserver ntp
         option enabled 1
         option enable_server 0
 
+===============================================================================
+SSH Access
+----------
+
+    -- Simply set the root password to 'friday', this will enable SSH access.
+
+        passwd root
+
+httplib2
+--------
+
+    -- tar up httplib2 files from the system libs and scp them to the device
+
+        cd /usr/lib/python2.7/dist-packages
+        tar zcvf /tmp/py.tar.gz ./httplib2
+        scp /tmp/py.tar.gz root@ld5:/tmp
+
+    -- log into the device and untar to device system libs location
+
+        cd /usr/lib/python2.7/site-packages
+        tar zxvf /tmp/py.tar.gz
+
+LD code
+-------
+
+    -- tar up LD files from ~/src/ld and scp them into the device /tmp
+
+        cd ~/src/ld
+        tar zcvf /tmp/ld.tar.gz ./libs ./littledev
+        scp /tmp/ld.tar.gz root@ld5:/tmp
+
+    -- log into the device and untar to source location
+
+        mkdir -p /root/ld
+        cd /root/ld
+        tar zxvf /tmp/ld.tar.gz
+
+    -- create the JSON device databases
+
+        cd /root/ld/littledev/db
+        python makeLDDB.py
+
+    -- ensure that the hostname shows up in /etc/hosts
+
+        vi /etc/hosts
+        -- add:
+            192.168.0.75 erl3 OpenWrt-Router
+
+    -- start the comms manager
+
+        cd /root/ld/littledev
+        python commsManager.py
