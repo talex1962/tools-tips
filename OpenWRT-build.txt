@@ -16,7 +16,7 @@ Building OpenWRT
 
     NOTE: for Gparted usage, set up xrdp for remote desktop:
     sudo apt-get install -y xrdp
-    sudo /etc/init/d/xrdp start
+    sudo /etc/init.d/xrdp start
 
     Now use remote desktop to access the machine. A new screen will be created. Log
     in with standard user credentials.
