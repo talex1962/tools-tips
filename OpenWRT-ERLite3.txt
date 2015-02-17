@@ -33,7 +33,7 @@ Loading OpenWRT On Ubiquiti ERLite-3
             1
             b
             w
-        sudo umount /dev/sdc1 /dev/sdc2 (or /dev/sdb1 /dev/sdb2)
+        sudo umount /dev/sdc1 /dev/sdc2 /dev/sdc3 (or /dev/sdb1 /dev/sdb2)
         sudo mkfs.fat /dev/sdc1 (or /dev/sdb1)
 
 5. Verify that the partitions are good:
@@ -81,9 +81,9 @@ Loading OpenWRT On Ubiquiti ERLite-3
 
     This should show something like 50MB copied. Unmount the filesystems:
 
-    sudo umount /dev/sdc1 /dev/sdc2
+    sudo umount /dev/sdc1 /dev/sdc2 /dev/sdc3
         - or -
-    sudo umount /dev/sdb1 /dev/sdb2
+    sudo umount /dev/sdb1 /dev/sdb2 /dev/sdb3
 
 10. Remove the USB stick from the Linux system. Unplug the existing USB stick from
     ERLite3 router and plug the new one into it. Power on the router.

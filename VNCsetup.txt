@@ -1,0 +1,71 @@
+INSTALLING TIGHTVNC ON SERVER
+-----------------------------
+
+1. Install tightvnc and xfce4
+
+    sudo apt-get -y install tightvncserver xfce4 xfce4-goodies
+
+2. Create a .vnc directory with the xstartup file
+
+    vncserver
+        -- enter a password
+    vncserver -kill :1
+
+    vi .vnc/xstartup
+    -- edit to contain:
+        #!/bin/bash
+        xrdb $HOME/.Xresources
+        startxfce4 &
+
+    chmod +x ~/.vnc/xstartup
+
+3. Add tightvnc as a service on startup
+
+    sudo vi /etc/init.d/vncserver
+    -- edit to contain:
+        #!/bin/bash
+
+        PATH="$PATH:/usr/bin/"
+        export USER="tom"
+        DISPLAY="1"
+        DEPTH="16"
+        GEOMETRY="1280x1024"
+        OPTIONS="-depth ${DEPTH} -geometry ${GEOMETRY} :${DISPLAY}"
+        . /lib/lsb/init-functions
+
+        case "$1" in
+        start)
+            log_action_begin_msg "Starting vncserver for user '${USER}' on :${DISPLAY}"
+            su ${USER} -c "/usr/bin/vncserver ${OPTIONS}"
+            ;;
+
+        stop)
+            log_action_begin_msg "Stopping vncserver for user '${USER}' on :${DISPLAY}"
+            su ${USER} -c "/usr/bin/vncserver -kill :${DISPLAY}"
+            ;;
+
+        restart)
+            $0 stop
+            $0 start
+            ;;
+        esac
+
+        exit 0
+
+    sudo chmod +x /etc/init.d/vncserver
+
+4. Fix tab issue with xfce4
+
+    vi ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml
+    -- search for each line (there is more than one):
+        <property name="&lt;Super&gt;Tab" type="string" value="switch_window_key"/>
+       and replace with:
+        <property name="&lt;Super&gt;Tab" type="empty"/>
+
+5. Now start the VNC server
+
+    sudo service vncserver start
+    sudo update-rc.d vncserver defaults
+
+6. Connect to the VNC server at port 5901
+

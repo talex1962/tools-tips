@@ -1,0 +1,33 @@
+LVM SNAPSHOT & RSYNC FOR SNAPSHOTTING AND MIRRORING
+---------------------------------------------------
+
+1. lvm2 must already be installed
+
+    sudo apt-get install lvm2
+
+2. Make a snapshot with lvcreate, allowing 0.5G for new files created during mirror:
+
+    sudo lvcreate --size 500M -s -n drive_snap /dev/storage/drive
+    -- this creates a snapshot volume /dev/storage/drive_snap
+
+3. Mount the snapshot on a well-known path:
+
+    sudo mount /dev/storage/drive_snap /srv/storage/backup
+
+4. Mirror the mounted snapshot to the cloud server:
+
+    sudo rsync --delete -azhe 'ssh -q -y -i /root/.ssh/id_rsa' /srv/storage/backup/ ubuntu@cloud-server:/srv/storage/drivebak/data
+
+        where the volume holding the mirror is mounted on /srv/storage/drivebak and
+        ./data is the target directory into which the mirror is created
+
+    NOTE: takes about 6.5 minutes to mirror 2.7 GB this way over a GigE link;
+        subsequent invocations of rsync on unchanged data take a few seconds, and
+        an invocation on about 50 MB of modified data takes about 20 seconds.
+
+5. Unmount and delete the snapshot after the mirror completes:
+
+    sudo umount /srv/storage/backup
+    sudo lvremove /dev/mapper/storage-drive_snap
+
+7. To snapshot the mirror on the remote cloud server, follow the same steps as for rsnapshot.
